@@ -1,0 +1,1 @@
+(defpackage :asterblaster (:use :cl)) 
