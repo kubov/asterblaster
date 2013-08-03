@@ -9,6 +9,7 @@
   ())
 
 (defmethod resource-received-text ((res api-resource) client message)
+  (format t "[got message: ~S]~%" message)
   (write-to-client-text client message))
 
 (defmethod resource-client-connected ((res api-resource) client)
@@ -37,6 +38,21 @@
   ((msg-type "unknown" :type string)
    (data nil)))
 
+(def class* ping-server-message ()
+  ())
+
+(defparameter *server-message-names-alist*
+  '((ping-server-message . "ping")))
+
+(defun class-to-msg-type (class)
+  (assoc-cdr class *server-message-names-alist*))
+
+(defun make-server-message (class &rest args)
+  (make-instance 'server-message
+                 :msg-type (class-to-msg-type class)
+                 :data (apply #'make-instance class args)))
+
+
 (def class* client-message ()
   ((msg-type "unknown" :type string)
    (data nil)))
@@ -44,14 +60,25 @@
 (def class* hello-client-message ()
   ((name :type string)))
 
+(def class* rotate-client-message ()
+  ((direction)))
 
-(defparameter *client-message-classes-assoc*
-  '(("hello" . hello-client-message)))
+(def class* accelerate-client-message ()
+  ((throttle)))
+
+(def class* pong-client-message ()
+  ())
+
+(defparameter *client-message-classes-alist*
+  '(("hello" . hello-client-message)
+    ("rotate" . rotate-client-message)
+    ("accelerate" . accelerate-client-message)
+    ("pong" . pong-client-message)))
 
 (defun json-to-client-message (json)
   (let* ((alist (decode-json-from-string json))
          (msg-type-string (assoc-cdr :msg-type alist))
-         (msg-class (assoc-cdr msg-type-string *client-message-classes-assoc*
+         (msg-class (assoc-cdr msg-type-string *client-message-classes-alist*
                                :test #'equal)))
     (when (or (not msg-type-string) (not msg-class))
       (error "wrong message type"))
