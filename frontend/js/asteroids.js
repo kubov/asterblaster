@@ -27,7 +27,7 @@ function Spaceship(x, y, rot, id) {
     this.id = id;
 };
 
-Spaceship.prototype.draw = function(ctx) {
+Spaceship.prototype.spaceship_contour = function(ctx) {
     ctx.beginPath();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.rot);
@@ -35,6 +35,10 @@ Spaceship.prototype.draw = function(ctx) {
     ctx.lineTo(0, 20);
     ctx.lineTo(10, -10);
     ctx.closePath();
+}
+
+Spaceship.prototype.draw = function(ctx) {
+    this.spaceship_contour(ctx);
     ctx.lineWidth = STROKE_WIDTH;
     ctx.strokeStyle = 'black';
     ctx.stroke();
@@ -47,13 +51,7 @@ function MySpaceship(x, y, rot, id) {
 MySpaceship.prototype = Object.create(Spaceship.prototype, {
     draw : {
         value : function(ctx) {
-            ctx.beginPath();
-            ctx.translate(this.x, this.y);
-            ctx.rotate(this.rot);
-            ctx.moveTo(-10, -10);
-            ctx.lineTo(0, 20);
-            ctx.lineTo(10, -10);
-            ctx.closePath();
+            this.spaceship_contour(ctx);
             ctx.lineWidth = STROKE_WIDTH;
             ctx.strokeStyle = 'red';
             ctx.stroke();
@@ -85,20 +83,22 @@ function Explosion(x, y) {
 Explosion.prototype.draw = function(ctx) {
     ctx.translate(this.x, this.y);
     ctx.beginPath();
-    // ctx.moveTo(0, 20);
-    // ctx.lineTo(-5, 5);
-    // ctx.lineTo(-20, 0);
-    // ctx.lineTo(-5, -5);
-    // ctx.lineTo(-15, -10);
-    // ctx.lineTo(-20, 10);
-    // ctx.lineTo(-5, 10);
-    // ctx.lineTo(15, 5);
-    // ctx.lineTo(10,10);
-    ctx.arc(this.x, this.y, 20, 0, 2 * Math.PI, false);
+    ctx.moveTo(0, 2);
+    ctx.lineTo(-2, 6);
+    ctx.lineTo(-4, 2);
+    ctx.lineTo(-8, 0);
+    ctx.lineTo(-4, -2);
+    ctx.lineTo(-6, -6);
+    ctx.lineTo(0, -2);
+    ctx.lineTo(2, -6);
+    ctx.lineTo(4, -2);
+    ctx.lineTo(6, -2);
+    ctx.lineTo(4, 0);
+    ctx.lineTo(6, 2);
+    // ctx.arc(this.x, this.y, 20, 0, 2 * Math.PI, false);
     ctx.closePath();
-    ctx.lineWidth = STROKE_WIDTH;
-    ctx.strokeStyle = 'red';
-    ctx.stroke();
+    ctx.fillStyle = 'red';
+    ctx.fill();
 };
 
 function drawState(arr) {
@@ -110,7 +110,7 @@ function drawState(arr) {
     }
 };
 
-var arr1 = [new Asteroid(200, 136, 50), new Spaceship(80, 80, Math.PI/180*35, 1), new Projectile(80, 80), new Explosion(100, 100), new MySpaceship(80, 80, Math.PI/180*35, 2)];
+var arr1 = [new Asteroid(200, 136, 50), new Spaceship(180, 180, Math.PI/180*35, 1), new Projectile(80, 80), new Explosion(100, 100), new MySpaceship(80, 80, Math.PI/180*35, 2)];
 
 var arr = [new Asteroid(100, 100, 50), new Asteroid(100, 100, 50)];
 arr = [new MySpaceship(100, 100, Math.PI/180*35, 1), new MySpaceship(100, 100, Math.PI/180*35, 2)];
