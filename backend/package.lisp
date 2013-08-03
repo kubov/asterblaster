@@ -2,4 +2,5 @@
                                 :cl-json
                                 :hu.dwim.defclass-star
                                 :hu.dwim.def
-                                :alexandria)) 
+                                :alexandria
+                                :chanl))
