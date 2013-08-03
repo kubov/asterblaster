@@ -16,4 +16,6 @@
     :properties ((#:author-email . "example@example.com"))
     :serial t
     :components ((:file "package")
-                 (:file "server")))
+                 (:file "server")
+                 (:file "utils")
+                 (:file "asteroids")))
