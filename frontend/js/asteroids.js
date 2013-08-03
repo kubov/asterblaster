@@ -1,12 +1,7 @@
-var SPACESHIP_RADIUS = 15;
-var SPACESHIP_SIDES = 3;
 var PROJECTILE_RADIUS = 3;
 var STROKE_WIDTH = 2;
-var STAR_RADIUS = 20;
-var STAR_RAYS = 7;
-
-var WIDTH = 1200;
-var HEIGHT = 700;
+var WIDTH = 600;
+var HEIGHT = 600;
 
 function Asteroid(x, y, size) {
     this.x = x;
@@ -98,7 +93,6 @@ Explosion.prototype.draw = function(ctx) {
     ctx.lineTo(18, -6);
     ctx.lineTo(12, 0);
     ctx.lineTo(18, 6);
-    // ctx.arc(this.x, this.y, 20, 0, 2 * Math.PI, false);
     ctx.closePath();
     ctx.fillStyle = 'red';
     ctx.fill();
@@ -127,9 +121,14 @@ function drawState(arr) {
     }
 };
 
+var bullet_sound = function() {
+    var snd = new Audio("media/bullet.mp3");
+    snd.play();
+};
+
+// document.getElementById('strzel').click(bullet_sound);
+
 var arr1 = [new Asteroid(200, 136, 50), new Spaceship(180, 180, Math.PI/180*35, 1), new Projectile(80, 80), new Explosion(100, 100), new MySpaceship(80, 80, Math.PI/180*35, 2)];
 
-var arr = [new Asteroid(100, 100, 50), new Asteroid(100, 100, 50)];
-arr = [new MySpaceship(100, 100, Math.PI/180*35, 1), new MySpaceship(100, 100, Math.PI/180*35, 2)];
-
 drawState(arr1);
+
