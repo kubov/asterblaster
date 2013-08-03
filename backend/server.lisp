@@ -24,12 +24,11 @@
                           (make-instance 'api-resource)
                           (origin-prefix nil))
 
-(bordeaux-threads:make-thread (lambda ()
-                                (run-resource-listener
-                                 (find-global-resource "/api")))
-                              :name "resource listener for /api")
-
 (defun start-asterblaster-server ()
   (bordeaux-threads:make-thread (lambda ()
                                 (run-server 13373))
-                                :name "Asterblaster"))
+                                :name "Asterblaster")
+  (bordeaux-threads:make-thread (lambda ()
+                                (run-resource-listener
+                                 (find-global-resource "/api")))
+                              :name "resource listener for /api"))
