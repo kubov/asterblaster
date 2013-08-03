@@ -37,6 +37,25 @@
   ((msg-type "unknown" :type string)
    (data nil)))
 
-(defun json-to-server-message (json)
-  (let ((alist (decode-json-from)))))
+(def class* client-message ()
+  ((msg-type "unknown" :type string)
+   (data nil)))
+
+(def class* hello-client-message ()
+  ((name :type string)))
+
+
+(defparameter *client-message-classes-assoc*
+  '(("hello" . hello-client-message)))
+
+(defun json-to-client-message (json)
+  (let* ((alist (decode-json-from-string json))
+         (msg-type-string (assoc-cdr :msg-type alist))
+         (msg-class (assoc-cdr msg-type-string *client-message-classes-assoc*
+                               :test #'equal)))
+    (when (or (not msg-type-string) (not msg-class))
+      (error "wrong message type"))
+    (make-instance 'client-message :msg-type msg-type-string
+                   :data (apply #'make-instance msg-class 
+                                (alist-plist (assoc-cdr :data alist))))))
 
