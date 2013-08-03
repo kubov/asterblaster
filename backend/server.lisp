@@ -1,12 +1,9 @@
-(in-package 'asterblaster)
+(in-package :asterblaster)
 
 (setf clws:*debug-on-server-errors* t)
 (setf clws:*debug-on-resource-errors* t)
 
 
-(bordeaux-threads:make-thread (lambda ()
-                                (run-server 13373))
-                              :name "Asterblaster")
 
 (defclass api-resource (ws-resource)
   ())
@@ -31,3 +28,8 @@
                                 (run-resource-listener
                                  (find-global-resource "/api")))
                               :name "resource listener for /api")
+
+(defun start-asterblaster-server ()
+  (bordeaux-threads:make-thread (lambda ()
+                                (run-server 13373))
+                                :name "Asterblaster"))

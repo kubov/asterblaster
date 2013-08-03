@@ -1,1 +1,1 @@
-(defpackage :asterblaster (:use :cl)) 
+(defpackage :asterblaster (:use :cl :clws)) 

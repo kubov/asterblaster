@@ -15,4 +15,5 @@
     (:clws)
     :properties ((#:author-email . "example@example.com"))
     :serial t
-    :components ((:file "package")))
+    :components ((:file "package")
+                 (:file "server")))
