@@ -11,7 +11,7 @@ function Asteroid(x, y, size) {
     this.size = size;
 };
 
-Asteroid.prototype.draw = function() {
+Asteroid.prototype.draw = function(ctx) {
 
 };
 
@@ -22,17 +22,15 @@ function Spaceship(x, y, rot, id) {
     this.id = id;
 };
 
-Spaceship.prototype.draw = function() {
-    var ctx = document.getElementById('mycanvas');
-
+Spaceship.prototype.draw = function(ctx) {
     ctx.beginPath();
-
-    ctx.moveTo(-5, -5);
-    ctx.lineTo(0, 10);
-    ctx.lineTo(20, -5);
-    ctx.lineTo(-20, -5);
-    ctx.strokeStyle = 'black';
+    ctx.translate(this.x, this.y);
+    ctx.moveTo(-10, -10);
+    ctx.lineTo(0, 20);
+    ctx.lineTo(10, -10);
     ctx.closePath();
+    ctx.lineWidth = STROKE_WIDTH;
+    ctx.strokeStyle = 'black';
     ctx.stroke();
     ctx.save();
 };
@@ -43,8 +41,16 @@ function MySpaceship(x, y, rot, id) {
 
 MySpaceship.prototype = Object.create(Spaceship.prototype, {
     draw : {
-        value : function() {
-
+        value : function(ctx) {
+            ctx.beginPath();
+            ctx.translate(this.x, this.y);
+            ctx.moveTo(-10, -10);
+            ctx.lineTo(0, 20);
+            ctx.lineTo(10, -10);
+            ctx.closePath();
+            ctx.strokeStyle = 'black';
+            ctx.stroke();
+            ctx.save();
         },
         enumerable: true, 
         configurable: true, 
@@ -57,7 +63,7 @@ function Projectile(x, y) {
     this.y = y;
 };
 
-Projectile.prototype.draw = function() {
+Projectile.prototype.draw = function(ctx) {
 
 }
 
@@ -66,13 +72,14 @@ function Explosion(x, y) {
     this.y = y;
 };
 
-Explosion.prototype.draw = function() {
+Explosion.prototype.draw = function(ctx) {
 
 };
 
 function drawState(arr) {
+    var ctx = document.getElementById('mycanvas').getContext('2d');
     for (i = 0; i < arr.length; ++i) {
-        arr[i].draw();
+        arr[i].draw(ctx);
     }
 };
 
