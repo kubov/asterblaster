@@ -32,3 +32,8 @@
                                 (run-resource-listener
                                  (find-global-resource "/api")))
                               :name "resource listener for /api"))
+
+(def class* server-message ()
+  ((msg-type "unknown" :type string)
+   (data nil)))
+
