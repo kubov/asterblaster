@@ -5,6 +5,9 @@ var STROKE_WIDTH = 2;
 var STAR_RADIUS = 20;
 var STAR_RAYS = 7;
 
+var WIDTH = 1200;
+var HEIGHT = 700;
+
 function Asteroid(x, y, size) {
     this.x = x;
     this.y = y;
@@ -16,7 +19,7 @@ Asteroid.prototype.draw = function(ctx) {
     ctx.arc(this.x, this.y, this.size, 0, 2 * Math.PI, false);
     ctx.closePath();
     ctx.lineWidth = STROKE_WIDTH;
-    ctx.strokeStyle = 'black';
+    ctx.strokeStyle = 'white';
     ctx.stroke();
 };
 
@@ -40,7 +43,7 @@ Spaceship.prototype.spaceship_contour = function(ctx) {
 Spaceship.prototype.draw = function(ctx) {
     this.spaceship_contour(ctx);
     ctx.lineWidth = STROKE_WIDTH;
-    ctx.strokeStyle = 'black';
+    ctx.strokeStyle = 'white';
     ctx.stroke();
 };
 
@@ -71,7 +74,7 @@ Projectile.prototype.draw = function(ctx) {
     ctx.beginPath();
     ctx.arc(this.x, this.y, PROJECTILE_RADIUS, 0, 2 * Math.PI, false);
     ctx.closePath();
-    ctx.fillStyle = 'black';
+    ctx.fillStyle = 'white';
     ctx.fill();
 }
 
@@ -83,26 +86,40 @@ function Explosion(x, y) {
 Explosion.prototype.draw = function(ctx) {
     ctx.translate(this.x, this.y);
     ctx.beginPath();
-    ctx.moveTo(0, 2);
-    ctx.lineTo(-2, 6);
-    ctx.lineTo(-4, 2);
-    ctx.lineTo(-8, 0);
-    ctx.lineTo(-4, -2);
-    ctx.lineTo(-6, -6);
-    ctx.lineTo(0, -2);
-    ctx.lineTo(2, -6);
-    ctx.lineTo(4, -2);
-    ctx.lineTo(6, -2);
-    ctx.lineTo(4, 0);
-    ctx.lineTo(6, 2);
+    ctx.moveTo(0, 6);
+    ctx.lineTo(-6, 18);
+    ctx.lineTo(-12, 6);
+    ctx.lineTo(-24, 0);
+    ctx.lineTo(-12, -6);
+    ctx.lineTo(-18, -18);
+    ctx.lineTo(0, -6);
+    ctx.lineTo(6, -18);
+    ctx.lineTo(12, -6);
+    ctx.lineTo(18, -6);
+    ctx.lineTo(12, 0);
+    ctx.lineTo(18, 6);
     // ctx.arc(this.x, this.y, 20, 0, 2 * Math.PI, false);
     ctx.closePath();
     ctx.fillStyle = 'red';
     ctx.fill();
 };
 
+function rect(x,y,w,h, ctx) {
+  ctx.beginPath();
+  ctx.rect(x,y,w,h);
+  ctx.closePath();
+  ctx.fill();
+};
+
+function clear(ctx) {
+  ctx.clearRect(0, 0, WIDTH, HEIGHT);
+  rect(0,0,WIDTH,HEIGHT, ctx);
+};
+
 function drawState(arr) {
     var ctx = document.getElementById('mycanvas').getContext('2d');
+    ctx.fillStyle = 'black'
+    clear(ctx);
     for (i = 0; i < arr.length; ++i) {
         ctx.save();
         arr[i].draw(ctx);
