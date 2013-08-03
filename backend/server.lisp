@@ -37,3 +37,6 @@
   ((msg-type "unknown" :type string)
    (data nil)))
 
+(defun json-to-server-message (json)
+  (let ((alist (decode-json-from)))))
+

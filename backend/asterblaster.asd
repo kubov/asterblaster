@@ -12,7 +12,7 @@
     :licence "GNU GPL v3 or later"
     :description ""
     :depends-on
-    (:clws :hu.dwim.defclass-star+hu.dwim.def :cl-json)
+    (:clws :hu.dwim.defclass-star+hu.dwim.def :cl-json :alexandria)
     :properties ((#:author-email . "example@example.com"))
     :serial t
     :components ((:file "package")
