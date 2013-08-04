@@ -32,25 +32,30 @@
 
 (defmethod resource-received-text ((res api-resource) client json)
   (format t "[got message: ~S]~%" json)
-  (let ((message (json-to-client-message json)))
-    (ecase (type-of message)
+  (let ((message (json-to-client-message json))
+        (id (client-id client)))
+    (case (type-of message)
       (hello-client-message 
-       (let ((id (client-id client)))
-         (unless id 
-           (format t "id: ~A???~%" id)
-           (return-from resource-received-text))
-         (with-lock-held (*client-db-lock*)
-           (remhash id *waiting-clients*)
-           (setf (gethash id *connected-clients*) client))
-         (send-state-update 'user-join-message 
-                            :name (name-of message)
-                            :id id)
-         (send-to-client client (make-server-message 'hello-reply-message
-                                                     :id id))))
+       (unless id 
+         (format t "id: ~A???~%" id)
+         (return-from resource-received-text))
+       (with-lock-held (*client-db-lock*)
+         (remhash id *waiting-clients*)
+         (setf (gethash id *connected-clients*) client))
+       (send-state-update 'user-join-message 
+                          :name (name-of message)
+                          :id id)
+       (send-to-client client (make-server-message 'hello-reply-message
+                                                   :id id)))
       (accelerate-client-message 
-       t)
+       (send-state-update 'user-accelerate-message
+                          :id id
+                          :status (status-of message)))
       (rotate-client-message
-       t))))
+       (send-state-update 'user-rotate-message
+                           :id id
+                           :status (status-of message)
+                           :direction (direction-of message))))))
 
 (defmethod resource-client-connected ((res api-resource) client)
   (format t "[connection on api server from ~s : ~s]~%"
@@ -152,6 +157,15 @@
 
 (def class* user-leave-message ()
   ((id)))
+
+(def class* user-accelerate-message ()
+  ((id)
+   (status)))
+
+(def class* user-rotate-message ()
+  ((id)
+   (status)
+   (direction)))
 
 (defun send-state-update (class &rest args)
   (send *update-state-channel* 

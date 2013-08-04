@@ -176,7 +176,11 @@
              (format t "handling join~&")
              (handle-player-join msg))
             (user-leave-message         ; TODO: implement
-             (handle-player-leave msg))))))
+             (handle-player-leave msg))
+            (user-accelerate-message
+             t)
+            (user-rotate-message
+             t)))))
 
 (defun send-state-to-clients ()
   (loop do
