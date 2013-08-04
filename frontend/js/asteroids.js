@@ -183,6 +183,26 @@ Welcome.prototype.draw = function(ctx) {
     ctx.fillText(this.text, WIDTH / 2, HEIGHT - 100);  
 };
 
+function UFO(x, y) {
+    this.x = x;
+    this.y = y;
+};
+
+UFO.prototype.draw = function(ctx) {
+    ctx.translate(this.x, this.y);
+    ctx.beginPath();
+    ctx.moveTo(12, 4);
+    ctx.lineTo(-12, 4);
+    ctx.lineTo(-30, 0);
+    ctx.lineTo(-18, -6);
+    ctx.lineTo(18, -6);
+    ctx.lineTo(30, 0);
+    ctx.closePath();
+    ctx.strokeStyle = 'green';
+    ctx.lineWidth = STROKE_WIDTH;
+    ctx.stroke();
+}
+
 var bullet_sound = function() {
     var snd = new Audio("media/bullet.mp3");
     snd.play();
@@ -190,7 +210,7 @@ var bullet_sound = function() {
 
 // var arr1 = [new Asteroid(200, 136, 50), new Spaceship(180, 180, Math.PI/180*35, 1), new Projectile(80, 80), new Explosion(100, 100), new MySpaceship(80, 80, Math.PI/180*35, 2), new Welcome()];
 
-var arr1 = [new Asteroid(200, 136, 50), new Asteroid(400, 200, 30), new Spaceship(100, 350, 0, 1, ""), new Spaceship(200, 350, 0, 2, ""), new Spaceship(300, 350, 0, 3, ""), new MySpaceship(400, 350, 0, 1, "Your spaceship"), new Spaceship(500, 350, 0, 1, ""), new Welcome()];
+var arr1 = [new Asteroid(200, 136, 50), new Asteroid(400, 200, 30), new Spaceship(100, 350, 0, 1, ""), new Spaceship(200, 350, 0, 2, ""), new Spaceship(300, 350, 0, 3, ""), new MySpaceship(400, 350, 0, 1, "Your spaceship"), new Spaceship(500, 350, 0, 1, ""), new Welcome(), new UFO(300, 300)];
 
 var res = [new Result("danka", 100), new Result("adam", 20)];
 
