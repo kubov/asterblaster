@@ -217,7 +217,7 @@
          (square (diff y1 y2)))))
 
 (defun colliding? (obj1 obj2)
-  (unless (eq obj1 obj2)
+  (unless (and (eq obj1 obj2) (alive? obj1) (alive? obj2))
     (with-slots ((pos1 position) (r1 radius)) obj1
       (with-slots ((pos2 position) (r2 radius)) obj2
         (with-slots ((x1 x) (y1 y)) pos1
