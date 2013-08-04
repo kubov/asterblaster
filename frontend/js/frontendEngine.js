@@ -35,7 +35,7 @@ function onOpen(evt) {
 };
 
 function onClose(evt) {
-	console.log("koneic polaczenia");
+	//console.log("koneic polaczenia");
 };
 
 function activateGame() {
@@ -45,11 +45,10 @@ function activateGame() {
 
 function joinGame() {
 	establishConnection();
-	window.onunload = leaveGame();
+	window.onunload = leaveGame;
 }
 
 function leaveGame() {
-	amIAlive = false;
 	connection.close();
 	addEventListener("keydown", function (e) { return true; });
 	addEventListener("keyup", function (e) { return true; });
