@@ -23,12 +23,23 @@ body {
 	margin: 0 auto;
 }
 
+#footer {
+    margin: 0px auto;
+    color: white;
+    font-size: 20pt;
+
+}
+
 .navbar {
-	background-color: grey;
+	background-color: #000;
 	filter: alpha(opacity=50);
 	padding-top: 10pt;
 	opacity: 0.7;
 	-moz-opacity:0.7;
+}
+
+.email {
+    display:inline;
 }
 
 .navbar-brand {
