@@ -166,13 +166,18 @@
              (handle-player-join msg))))))
 
 (defun send-state-to-clients ()
-  (let (json clients)
-    (with-lock-held (*game-state-lock*)
-      (setf json (encode-json-to-string
-                  (make-instance 'server-message
-                                 :msg-type "state"
-                                 :data *global-game-state*))))
-    (with-lock-held (*client-db-lock*)
-      (setf clients (hash-table-values *connected-clients*)))
-    (loop for client in clients
-       do (write-to-client-text client json))))
+  (loop do 
+       (sleep 1/4)
+       (let (json clients)
+         (with-lock-held (*game-state-lock*)
+           (with-slots (players asteroids projectiles) *global-game-state*
+             (setf json (encode-json-to-string
+                         (make-server-message 'state-server-message
+                                              :players players
+                                              :asteroids asteroids
+                                              :projectiles projectiles
+                                              :collisions '())))))
+         (with-lock-held (*client-db-lock*)
+           (setf clients (hash-table-values *connected-clients*)))
+         (loop for client in clients
+            do (write-to-client-text client json)))))

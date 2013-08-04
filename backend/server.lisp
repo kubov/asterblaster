@@ -55,7 +55,13 @@
             new-id))))
 
 (defmethod resource-client-disconnected ((resource api-resource) client)
-  (format t "[disconnected from resource ~A: ~A]~%" resource client))
+  (format t "[disconnected from resource ~A: ~A]~%" resource client)
+  (let ((id (client-id client)))
+    (with-lock-held (*client-db-lock*)
+      (if (gethash id *connected-clients*)
+          (remhash id *connected-clients*)
+          (remhash id *waiting-clients*))
+      (remhash (client-address client) *client-to-id*))))
 
 
 (register-global-resource "/api"
@@ -72,9 +78,16 @@
 (def class* ping-server-message ()
   ())
 
+(def class* state-server-message ()
+  ((players)
+   (asteroids)
+   (projectiles)
+   (collisions)))
+
 (defparameter *server-message-names-alist*
   '((ping-server-message . "ping")
-    (hello-reply-message . "helloReply")))
+    (hello-reply-message . "helloReply")
+    (state-server-message . "state")))
 
 (defun class-to-msg-type (class)
   (assoc-cdr class *server-message-names-alist*))
