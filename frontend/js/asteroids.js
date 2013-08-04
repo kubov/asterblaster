@@ -25,15 +25,6 @@ Asteroid.prototype.draw = function(ctx) {
     ctx.lineWidth = STROKE_WIDTH;
     ctx.strokeStyle = 'white';
     ctx.stroke();
-
-    ctx.restore();
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.size, 0, 2 * Math.PI, false);
-    ctx.closePath();
-    ctx.lineWidth = STROKE_WIDTH;
-    ctx.strokeStyle = 'white';
-    ctx.stroke();
 };
 
 function Spaceship(x, y, rot, id) {
