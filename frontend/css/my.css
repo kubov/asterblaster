@@ -15,3 +15,22 @@ body {
 	display: block;
 	margin: 0 auto;
 }
+
+.navbar {
+	background-color: grey;
+	filter: alpha(opacity=50);
+	padding-top: 10pt;
+	opacity: 0.7;
+	-moz-opacity:0.7;
+}
+
+.navbar-brand {
+	color: white;
+	font-size: 20pt;
+	padding-left: 20pt;
+}
+
+.yourname {
+	color: white;
+	font-size: 18pt;
+}

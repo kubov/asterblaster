@@ -60,7 +60,7 @@ function onMessage(evt) {
 			mySpaceship = data.data.id;	
 			break;
 		case "state":
-			//console.log(data.data);
+			console.log(data.data);
 			parseGameObjects(data.data);
 			break;
 	}
