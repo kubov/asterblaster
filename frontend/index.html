@@ -23,6 +23,7 @@
     
     <!-- Add your site or application content here -->
     <h1>Asterblaster.</h1>
+	<div id="message"></div>
     <div id="gameboard"></div>
     <button type="button" class="btn btn-default">Join</button>
     
@@ -43,5 +44,9 @@
       g.src='//www.google-analytics.com/ga.js';
       s.parentNode.insertBefore(g,s)}(document,'script'));
     </script>
+
+	  <button onclick="sendMessage()">Send message</button>
+	  <button onclick="testMethod()">Test message</button>
+	  <button onclick="connection.close()">Close message</button>
   </body>
 </html>

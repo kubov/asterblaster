@@ -27,12 +27,17 @@ function onOpen(evt) {
 		"data": { "name": "Magda" },
 	}
 	connection.send(JSON.stringify(jsonMessage));
-	console.log(connection.readyState);
+	activateGame();
 };
 
 function onClose(evt) {
 	console.log("koneic polaczenia");
 };
+
+function activateGame() {
+	document.getElementById("message").innerHTML("activated");
+	document.onkeypress = onKeyPress;
+}
 
 function sendMessage() {
 	establishConnection();
@@ -55,8 +60,7 @@ function onMessage(evt) {
 			mySpaceship = data.data.id;	
 			break;
 		case "gameState":
-			parseGameObjects(data.data)
-			
+			parseGameObjects(data.data)	
 	}
 
 };
@@ -90,28 +94,39 @@ function parseGameObjects(data) {
 	
 }
 
-function onKeyPress(evt) {
-	console.log("tu jestm");
-	var keyType;
+function onKeyDown(evt) {
+	on
+}
+
+function onKeyPress(status) {
+	var msgType;
+	var rotateType;
 	switch (evt.keyCode) {
-		case MOVE_UP:
-			keyType = "up";
+		case MOVE_LEFT:
+			msgType = "rotate";
+			rotateType = "left";
 			break;
-		case MOVE_DOWN:
-			keyType = "down";
+		case MOVE_RIGHT:
+			msgType = "rotate";
+			rotateType = "right";
 			break;			
+		case MOVE_UP:
+			msgType = "accelerate";
+			break;
 	}
 	
-
-	/*
-	var json = {
-		"msgType": "move",
-		"data": {
-			"key" : keyType
+	if (msgType != undefined)
+	{
+		var json = {
+			"msgType": msgType,
+			"data": {
+				"rotate": rotateType,
+				"status": "down"
+			}
 		}
+		connection.send(JSON.stringify(json));
 	}
-	connection.send(JSON.stringify(json));
-	*/
+	
 };
 
 function testMethod() {
