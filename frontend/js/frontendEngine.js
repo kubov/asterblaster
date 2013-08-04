@@ -63,7 +63,7 @@ function onMessage(evt) {
 			amIAlive = true;
 			break;
 		case "state":
-			console.log(data.data);
+			//console.log(data.data);
 			parseGameObjects(data.data);
 			break;
 	}
@@ -95,6 +95,7 @@ function parseGameObjects(data) {
 				}
 			} else {
 				if (data["players"][key]["alive?"] != null) {
+					console.log(data["players"][key].name);
 					var temp = new Spaceship(data["players"][key]["position"].x,
 						data["players"][key]["position"].y, data["players"][key].k * multiply,
 						data["players"][key].id, data["players"][key].name);
