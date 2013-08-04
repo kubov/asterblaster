@@ -35,6 +35,7 @@
   ((position (get-random-spot) :type pos-vector)
    (speed 0 :type fixnum)
    (id :type fixnum)
+   (alive t :type boolean)
    (radius 30 :type fixnum)
    (direction (get-random-spot) :type pos-vector)))
 
@@ -50,6 +51,7 @@
   ((name "unknown-player" :type string)
    (id :type fixnum)
    (speed 0 :type fixnum)
+   (alive t :type boolean)
    (radius 30 :type fixnum)
    (k 0 :type fixnum)
    (rotating? nil :type boolean)
@@ -62,6 +64,7 @@
   ((position (get-standard-spot) :type pos-vector)
    (radius 2 :type fixnum)
    (id :type fixnum)
+   (alive t :type boolean)
    (speed 10 :type fixnum)
    (direction (get-standard-spot) :type pos-vector)))
 
@@ -244,10 +247,19 @@
     (asteroid (asteroids-of state))
     (projectile (projectiles-of state))))
 
+(defun kill-object (type id)
+  (with-slots (alive) (get-object type id)
+    (setf alive nil))
+
 (defun with-collisions (state col)
   (mapcar #'(lambda (p)
-              (remhash (car (car p)) (objects-from-type state (second (car p))))
-              (remhash (car (second p)) (objects-from-type state (second (second p))))) col))
+              (let ((first-id (first (first p)))
+                    (first-type (second (first p)))
+                    (second-id (first (second p)))
+                    (second-type (second (second p))))
+                (kill-object first-type first-id)
+                (kill-object second-type second-id))) col))
+
 
 
 (defun handle-player-join (player)
