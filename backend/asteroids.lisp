@@ -2,7 +2,7 @@
 
 (defparameter *canvas-w* 600)
 (defparameter *canvas-h* 600)
-(defparameter *acceleration* 5)
+(defparameter *acceleration* 3)
 (defparameter *max-speed* 30)
 (defparameter *root-degree* 36)
 (defparameter *pi* 3.14)
@@ -155,8 +155,8 @@
     (when rotating?
       (setf k (mod
                (if rotation-direction
-                   (1- k) 
-                   (1+ k))
+                   (1+ k) 
+                   (1- k))
                *root-degree*)))
     (let* ((vdelta
             (if accelerating?
