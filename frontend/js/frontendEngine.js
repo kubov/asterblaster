@@ -45,9 +45,11 @@ function activateGame() {
 
 function joinGame() {
 	establishConnection();
+	window.onunload = leaveGame();
 }
 
 function leaveGame() {
+	amIAlive = false;
 	connection.close();
 	addEventListener("keydown", function (e) { return true; });
 	addEventListener("keyup", function (e) { return true; });
@@ -120,7 +122,9 @@ function parseGameObjects(data) {
 
 function onKeyDown(evt) {
 
-	evt.preventDefault();
+	if (usedKeys.indexOf(evt.keyCode) > -1) {
+		evt.preventDefault();
+	}
 	if (evt.keyCode == SHOT) {
 		if (amIAlive) {
 			var snd = new Audio("media/bullet.mp3");  
@@ -136,7 +140,9 @@ function onKeyDown(evt) {
 
 function onKeyUp(evt) {
 	if (amIAlive) {
-		evt.preventDefault();
+		if (usedKeys.indexOf(evt.keyCode) > -1) {
+			evt.preventDefault();
+		}
 		var i = pressedKeys.indexOf(evt.keyCode);
 		if (i > -1) {
 			pressedKeys.splice(i, 1);
