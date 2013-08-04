@@ -8,6 +8,8 @@
 
 (defparameter *shoot-timeout* 36)
 
+(defparameter *projectile-ttl* *shoot-timeout*)
+
 (defparameter *root-degree* 36)
 (defparameter *pi* 3.14)
 
@@ -58,7 +60,7 @@
    (id :type fixnum)
    (speed 0 :type fixnum)
    (alive? t :type boolean)
-   (radius 30 :type fixnum)
+   (radius 10 :type fixnum)
    (k 0 :type fixnum)
    (rotating? nil :type boolean)
    (rotation-direction nil :type boolean)
@@ -76,6 +78,7 @@
    (id :type fixnum)
    (alive? t :type boolean)
    (speed 10 :type fixnum)
+   (ttl *projectile-ttl* :type fixnum)
    (direction (get-standard-spot) :type pos-vector)))
 
 (def class* game-state ()
@@ -94,11 +97,11 @@
   (make-instance type
                  :position (get-random-spot)
                  :direction (make-instance 'pos-vector
-                                           :x (truncate
-                                               (- (random 20) 10) 2)
-                                           :y (truncate
-                                               (- (random 20) 10) 2))
-                 :speed (+ 0.8 (random 0.5))))
+                                           :x (/
+                                               (- (random 20) 10) 2.0)
+                                           :y (/
+                                               (- (random 20) 10) 2.0))
+                 :speed (+ 0.5 (random 0.5))))
 
 
 (defun generate-initial-state ()
@@ -130,6 +133,14 @@
     (make-instance 'pos-vector
                    :x (* x scalar)
                    :y (* y scalar))))
+
+(defun complex-multiply (vect1 vect2)
+  (with-slots ((x1 x) (y1 y)) vect1
+    (with-slots ((x2 x) (y2 y)) vect2
+      (let ((c (* (complex x1 y1) (complex x2 y2))))
+        (make-instance 'pos-vector
+                       :x (realpart c)
+                       :y (imagpart c))))))
 
 (defun vector-length (vect)
   (with-slots (x y) vect
@@ -180,20 +191,25 @@
                                         (min (vector-length new-dir)
                                              *max-speed*)))
       ;; slow down because of resistance
-      (setf direction (add-pos-vectors direction 
-                                       (normalize-vector direction
-                                                         *speed-damping-factor*)))
+      (setf direction (if (> (vector-length direction) (abs *speed-damping-factor*)) 
+                          (add-pos-vectors direction 
+                                           (normalize-vector direction
+                                                             *speed-damping-factor*))
+                          (make-instance 'pos-vector :x 0 :y 0)))
       (setf position (mod-vector (add-pos-vectors position direction))))))
 
 (defun recalc-asteroid (asteroid-id asteroid)
   (declare (ignore asteroid-id))
   (with-slots (position speed direction) asteroid
-    (recalc-pos-vector position direction speed)))
+    (setf position (mod-vector (add-pos-vectors position direction)))))
 
 (defun recalc-projectile (projectile-id projectile)
   (declare (ignore projectile-id))
-  (with-slots (position speed direction) projectile
-    (recalc-pos-vector position direction speed)))
+  (with-slots (alive? position speed direction ttl) projectile
+    (recalc-pos-vector position direction speed)
+    (decf ttl)
+    (when (minusp ttl)
+      (setf alive? nil))))
 
 
 (defun recalc-players (players)
@@ -203,7 +219,7 @@
   (maphash 'recalc-asteroid asteroids))
 
 (defun recalc-projectiles (projectiles)
-  (maphash 'recalc-asteroid projectiles))
+  (maphash 'recalc-projectile projectiles))
 
 (defun square (x)
   (* x x))
@@ -230,26 +246,66 @@
      (mod (+ (/ *canvas-w* 2) x) *canvas-h*)
      (mod (+ (/ *canvas-h* 2) y) *canvas-w*))))
 
-(defun check-collisions-between (hash1 hash2)
+(defun find-collisions-between (hash1 hash2)
   (loop for key1 being the hash-key in hash1
      for value1 being the hash-value in hash1
+     when (alive? value1)
      append (loop for key2 being the hash-key in hash2
-          for value2 being the hash-value in hash2
-          when (colliding? value1 value2)
-           collect (list
-                    (list key1 (type-of value1))
-                    (list key2 (type-of value2))))))
+               for value2 being the hash-value in hash2
+               when (and (alive? value2)  (colliding? value1 value2))
+               collect (list value1
+                             value2))))
 
-(defun check-collisions (state)
+(defun find-collisions (state)
   (with-slots (players asteroids projectiles) state
-    (append
-     (check-collisions-between players players)
-     (check-collisions-between players asteroids)
-     (check-collisions-between asteroids projectiles))))
+    (let ((player-asteroid-collisions
+           (find-collisions-between players asteroids))
+          (asteroid-projectile-colissions 
+           (find-collisions-between asteroids projectiles)))
+      (loop for col in player-asteroid-collisions
+         do (destructuring-bind (player asteroid) col
+              (setf (alive? player) nil)
+              (break-asteroid state asteroid)))
+      (loop for col in asteroid-projectile-colissions
+         do (destructuring-bind (asteroid projectile) col
+              (setf (alive? projectile) nil)
+              (break-asteroid state asteroid)))
+      (nconc player-asteroid-collisions asteroid-projectile-colissions))))
+
+(defun break-asteroid (state asteroid)
+  (setf (alive? asteroid) nil)
+  (make-two-smaller-asteroids state asteroid))
+
+(defun make-two-smaller-asteroids (state old-asteroid)
+  (with-slots (radius position speed direction) old-asteroid
+    (when (<= radius 10)
+      (return-from make-two-smaller-asteroids))
+    (let* ((new-radius (- radius 10))
+           (new-k (random *root-degree*))
+           (other-k (random *root-degree*))
+           (id1 (incf *asteroid-id-seq*)) 
+           (id2 (incf *asteroid-id-seq*)))
+      (setf (gethash id1 (asteroids-of state))
+            (make-instance 'asteroid
+                           :id id1
+                           :position position
+                           :radius new-radius
+                           :speed speed
+                           :direction (complex-multiply direction
+                                                        (root-of-unity new-k)))
+            (gethash id2 (asteroids-of state))
+            (make-instance 'asteroid
+                           :id id2
+                           :position position
+                           :radius new-radius
+                           :speed speed
+                           :direction (complex-multiply direction
+                                                        (root-of-unity other-k)))))))
+
 
 (defun maybe-shoot-projectiles (players projectiles)
   (loop for player being the hash-value in players 
-     when (shooting? player)
+     when (and (alive? player) (shooting? player))
      do 
        (with-slots (position k shoot-timeout) player
          (cond
@@ -272,8 +328,7 @@
     (recalc-players players)
     (maybe-shoot-projectiles players projectiles)
     (recalc-projectiles projectiles)
-    (let ((collisions (check-collisions state)))
-      (with-collisions state collisions))))
+    (find-collisions state)))
 
 (defun objects-from-type (state type)
   (case type
@@ -284,16 +339,6 @@
 (defun kill-object (type id)
   (with-slots (alive?) (get-object type id)
     (setf alive? nil)))
-
-(defun with-collisions (state col)
-  (mapcar #'(lambda (p)
-              (let ((first-id (first (first p)))
-                    (first-type (second (first p)))
-                    (second-id (first (second p)))
-                    (second-type (second (second p))))
-                (kill-object first-type first-id)
-                (kill-object second-type second-id))) col))
-
 
 
 (defun handle-player-join (player)
@@ -367,8 +412,28 @@
        (sleep 1/30)
        (let (collisions json clients)
          (with-lock-held (*game-state-lock*)
-           (setf collisions (update-state *global-game-state*))
+           (when (or
+                  (zerop (count-if #'alive? 
+                                   (hash-table-values (players-of *global-game-state*))))
+                  (zerop (count-if #'alive?
+                                   (hash-table-values (asteroids-of *global-game-state*)))))
+               ;; no alive players, reset game
+             (let ((p (players-of *global-game-state*))) ;; save old players
+               (setf *global-game-state* (generate-initial-state))
+               (setf (players-of *global-game-state*) p)
+               (loop for player being the hash-value in p
+                  do (with-slots (alive? direction) player
+                         (setf alive? t
+                               direction (make-instance 'pos-vector
+                                                        :x 0.0
+                                                        :y 0.0))
+                         (send-to-client (get-client-by-id (id-of player))
+                                         (make-server-message 'hello-reply-message
+                                                              :id (id-of player)))))
+               (sleep 2)))
+           
            (with-slots (players asteroids projectiles) *global-game-state*
+             (setf collisions (update-state *global-game-state*))
              (setf json (encode-json-to-string
                          (make-server-message 'state-server-message
                                               :players players
