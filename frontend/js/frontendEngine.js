@@ -77,14 +77,16 @@ function parseGameObjects(data) {
 		}
 	}
 	if (data["players"] != null) {
+		var multiply =  2 * Math.PI * (1 / ROTATION_ANGLE);
+		console.log(multiply);
 		for (var key in data["players"]) {
 			if (key == mySpaceship) {
 				var temp = new MySpaceship(data["players"][key]["position"].x,
-					data["players"][key]["position"].y, data["players"][key].radius, data["players"][key].id);
+					data["players"][key]["position"].y, data["players"][key].k * multiply, data["players"][key].id);
 				//console.log(data["players"][key].speed);
 			} else {
 				var temp = new Spaceship(data["players"][key]["position"].x,
-					data["players"][key]["position"].y, data["players"][key].radius, data["players"][key].id);
+					data["players"][key]["position"].y, data["players"][key].k * multiply, data["players"][key].id);
 
 			}
 			objects.push(temp);

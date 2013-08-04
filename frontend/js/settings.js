@@ -11,3 +11,5 @@ var SHOT = 32; // space
 
 // Connection settings
 var SERVER_URL = "ws://54.213.111.220:13373/api";
+
+var ROTATION_ANGLE = 36;

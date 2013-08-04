@@ -28,6 +28,7 @@ function Spaceship(x, y, rot, id) {
 Spaceship.prototype.spaceship_contour = function(ctx) {
     ctx.beginPath();
     ctx.translate(this.x, this.y);
+    ctx.rotate(- Math.PI / 2);
     ctx.rotate(this.rot);
     ctx.moveTo(-10, -10);
     ctx.lineTo(0, 20);
