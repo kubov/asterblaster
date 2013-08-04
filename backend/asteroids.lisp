@@ -22,7 +22,7 @@
 (def class* game-entity () ())
 
 (defmethod print-object ((object game-entity) stream)
-  (print-unreadable-object (object stream) 
+  (print-unreadable-object (object stream)
     (format stream "~s ~s" (type-of object)
             (loop for i in (get-slots object)
                collect (cons i (slot-value object i))))))
@@ -97,8 +97,8 @@
 (defun recalc-pos-vector (current-pos vect speed)
   (let* ((vect (multiply-by-scalar vect speed)))
     (with-slots (x y) current-pos
-      (setf (x-of current-pos) (+ x (x-of vect)))
-      (setf (y-of current-pos) (+ y (y-of vect))))))
+      (setf (x-of current-pos) (mod (+ x (x-of vect)) *canvas-w*))
+      (setf (y-of current-pos) (mod (+ y (y-of vect)) *canvas-h* )))))
 
 (defun add-to-hash-table (hash key elem)
   (setf (gethash key hash) elem))
