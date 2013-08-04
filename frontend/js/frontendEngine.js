@@ -59,7 +59,7 @@ function onMessage(evt) {
 	var data = JSON.parse(evt.data);
 	switch (data.msgType) {
 		case "helloReply":
-			mySpaceship = data.data.id;	
+			mySpaceship = data.data.id;
 			break;
 		case "state":
 			console.log(data.data);
@@ -81,12 +81,13 @@ function parseGameObjects(data) {
 		}
 	}
 	if (data["players"] != null) {
-		var multiply =  2 * Math.PI * (1 / ROTATION_ANGLE);
-		for (var key in data["players"]) {	
+		var multiply = 2 * Math.PI * (1 / ROTATION_ANGLE);
+		for (var key in data["players"]) {
 			if (key == mySpaceship) {
 				if (data["players"][key]["alive?"] != null) {
 					var temp = new MySpaceship(data["players"][key]["position"].x,
 						data["players"][key]["position"].y, data["players"][key].k * multiply, data["players"][key].id);
+					objects.push(temp);
 				} else {
 					//amIAlive = false;
 				}
@@ -114,20 +115,21 @@ function parseGameObjects(data) {
 		}
 	}
 	drawState(objects);
-	
+
 }
 
 function onKeyDown(evt) {
-	if (amIAlive) {
-		evt.preventDefault();
-		if (evt.keyCode == SHOT) {
+
+	evt.preventDefault();
+	if (evt.keyCode == SHOT) {
+		if (amIAlive) {
 			var snd = new Audio("media/bullet.mp3");
 			snd.play();
 		}
-		if (pressedKeys.indexOf(evt.keyCode) == -1) {
-			pressedKeys.push(evt.keyCode);
-			onKeyPress(evt, "down");
-		}
+	}
+	if (pressedKeys.indexOf(evt.keyCode) == -1) {
+		pressedKeys.push(evt.keyCode);
+		onKeyPress(evt, "down");
 	}
 	return false;
 }
@@ -145,7 +147,7 @@ function onKeyUp(evt) {
 }
 
 function onKeyPress(evt, status) {
-	
+
 	var msgType;
 	var data = {
 		"status": status
@@ -158,7 +160,7 @@ function onKeyPress(evt, status) {
 		case MOVE_RIGHT:
 			msgType = "rotate";
 			data["direction"] = "right";
-			break;				
+			break;
 		case MOVE_UP:
 			msgType = "accelerate";
 			break;
@@ -166,9 +168,8 @@ function onKeyPress(evt, status) {
 			msgType = "shot";
 			break;
 	}
-	
-	if (msgType != undefined)
-	{
+
+	if (msgType != undefined) {
 		var json = {
 			"msgType": msgType,
 			"data": data
@@ -177,6 +178,6 @@ function onKeyPress(evt, status) {
 		//console.log(JSON.stringify(json));
 	}
 
-	
+
 };
 
