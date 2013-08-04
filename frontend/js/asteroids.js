@@ -18,8 +18,7 @@ Asteroid.prototype.draw = function(ctx) {
     ctx.lineTo(-2 * k, -3 * k);
     ctx.lineTo(-2 * k, -5 * k);
     ctx.lineTo(-1 * k, -3 * k);
-    ctx.lineTo(2 * k, -3 * k);
-    ctx.lineTo(3 * k, -4 * k);
+    ctx.lineTo(3 * k, -3 * k);
     ctx.lineTo(3 * k, 1 * k);
     ctx.lineTo(1 * k, 2 * k);
     ctx.closePath();
