@@ -1,0 +1,7 @@
+body {
+     margin: 0;
+     background: url('../img/galaxy-constellation-star-background1.png');
+     background-size: 1440px 800px;
+     background-repeat:repeat;
+     display: compact;
+}
