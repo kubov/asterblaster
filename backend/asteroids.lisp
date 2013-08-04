@@ -2,8 +2,9 @@
 
 (defparameter *canvas-w* 600)
 (defparameter *canvas-h* 600)
-(defparameter *acceleration* 3)
-(defparameter *max-speed* 30)
+(defparameter *acceleration* 1)
+(defparameter *speed-damping-factor* -2/10)
+(defparameter *max-speed* 10)
 (defparameter *root-degree* 36)
 (defparameter *pi* 3.14)
 
@@ -151,7 +152,9 @@
 
 (defun recalc-player (player-id player)
   (declare (ignore player-id))
-  (with-slots (rotation-direction k position speed direction accelerating? rotating?) player
+  (with-slots (rotation-direction k position speed 
+                                  direction accelerating? rotating?) 
+      player
     (when rotating?
       (setf k (mod
                (if rotation-direction
@@ -168,7 +171,9 @@
                                         (min (vector-length new-dir)
                                              *max-speed*)))
       ;; slow down because of resistance
-      (setf direction (add-pos-vectors direction (normalize-vector direction -1)))
+      (setf direction (add-pos-vectors direction 
+                                       (normalize-vector direction
+                                                         *speed-damping-factor*)))
       (setf position (mod-vector (add-pos-vectors position direction))))))
 
 (defun recalc-asteroid (asteroid-id asteroid)
@@ -318,7 +323,7 @@
 
 (defun send-state-to-clients ()
   (loop do
-       (sleep 1/8)
+       (sleep 1/30)
        (let (collisions json clients)
          (with-lock-held (*game-state-lock*)
            (setf collisions (update-state *global-game-state*))
