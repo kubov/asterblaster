@@ -41,7 +41,7 @@
   ((position (get-random-spot) :type pos-vector)
    (speed 0 :type fixnum)
    (id :type fixnum)
-   (alive t :type boolean)
+   (alive? t :type boolean)
    (radius 30 :type fixnum)
    (direction (get-random-spot) :type pos-vector)))
 
@@ -57,7 +57,7 @@
   ((name "unknown-player" :type string)
    (id :type fixnum)
    (speed 0 :type fixnum)
-   (alive t :type boolean)
+   (alive? t :type boolean)
    (radius 30 :type fixnum)
    (k 0 :type fixnum)
    (rotating? nil :type boolean)
@@ -74,7 +74,7 @@
   ((position (get-standard-spot) :type pos-vector)
    (radius 2 :type fixnum)
    (id :type fixnum)
-   (alive t :type boolean)
+   (alive? t :type boolean)
    (speed 10 :type fixnum)
    (direction (get-standard-spot) :type pos-vector)))
 
@@ -116,7 +116,7 @@
   (case type
     (player (gethash id (players-of *global-game-state*)))
     (asteroid (gethash id (asteroids-of *global-game-state*)))
-    (projectiles (gethash id (projectiles-of *global-game-state*)))))
+    (projectile (gethash id (projectiles-of *global-game-state*)))))
 
 (defun add-pos-vectors (vect1 vect2)
   (with-slots ((x1 x) (y1 y)) vect1
@@ -258,7 +258,9 @@
               (setf (gethash new-id projectiles)
                     (make-instance 'projectile
                                    :id new-id
-                                   :position position
+                                   :position (make-instance 'pos-vector
+                                                            :x (x-of position)
+                                                            :y (y-of position))
                                    :direction (root-of-unity k))
                     shoot-timeout *shoot-timeout*)))
            ((> shoot-timeout 0) (decf shoot-timeout))
@@ -280,8 +282,8 @@
     (projectile (projectiles-of state))))
 
 (defun kill-object (type id)
-  (with-slots (alive) (get-object type id)
-    (setf alive nil))
+  (with-slots (alive?) (get-object type id)
+    (setf alive? nil)))
 
 (defun with-collisions (state col)
   (mapcar #'(lambda (p)
@@ -376,4 +378,4 @@
          (with-lock-held (*client-db-lock*)
            (setf clients (hash-table-values *connected-clients*)))
          (loop for client in clients
-            do (write-to-client-text client json)))))
+               do (write-to-client-text client json)))))
