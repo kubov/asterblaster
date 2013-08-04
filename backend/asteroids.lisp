@@ -130,31 +130,6 @@
      (+ (/ *canvas-w* 2) x)
      (+ (/ *canvas-h* 2) y))))
 
-(defun draw-asteroid (nothing asteroid)
-  (let ((cord (f (position-of asteroid))))
-    (format t "~A ~A~%" (first cord) (second cord))
-    (pal:draw-rectangle
-     (pal:v (first cord) (second cord))
-     10
-     10
-     0
-     0
-     0
-     255
-     :absolutep t
-     :smoothp nil)))
-
-
-(defun draw-asteroids (asteroids)
-  (maphash 'draw-asteroid asteroids))
-
-(defun test-draw ()
-  (pal:with-pal (:width *canvas-w* :height *canvas-h* :title "test")
-    (pal:event-loop ()
-      (draw-asteroids (asteroids-of *test-state*))
-      (pal:clear-screen (pal:color 255 255 255))
-      (sleep 1))))
-
 (defun check-collisions-between (hash1 hash2)
   (loop for key1 being the hash-key in hash1
      for value1 being the hash-value in hash1 do
