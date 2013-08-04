@@ -5,3 +5,13 @@ body {
      background-repeat:repeat;
      display: compact;
 }
+
+.container {
+	margin-left: auto;
+	margin-right: auto;
+}
+
+#mycanvas {
+	display: block;
+	margin: 0 auto;
+}
