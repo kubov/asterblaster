@@ -34,6 +34,7 @@
 (def class* asteroid (game-entity)
   ((position (get-random-spot) :type pos-vector)
    (speed 0 :type fixnum)
+   (id :type fixnum)
    (radius 30 :type fixnum)
    (direction (get-random-spot) :type pos-vector)))
 
@@ -46,7 +47,8 @@
   (make-instance 'pos-vector :x (car p) :y (cdr p)))
 
 (def class* player (game-entity)
-  ((name :type string)
+  ((name "unknown-player" :type string)
+   (id :type fixnum)
    (speed 0 :type fixnum)
    (radius 30 :type fixnum)
    (k 0 :type fixnum)
@@ -59,6 +61,7 @@
 (def class* projectile (game-entity)
   ((position (get-standard-spot) :type pos-vector)
    (radius 2 :type fixnum)
+   (id :type fixnum)
    (speed 10 :type fixnum)
    (direction (get-standard-spot) :type pos-vector)))
 
@@ -216,15 +219,16 @@
      append (loop for key2 being the hash-key in hash2
           for value2 being the hash-value in hash2
           when (colliding? value1 value2)
-           collect (cons
-                    (cons value1 (type-of value1))
-                    (cons value2 (type-of value2))))))
+           collect (list
+                    (list key1 (type-of value1))
+                    (list key2 (type-of value2))))))
 
 (defun check-collisions (state)
-  (with-slots (players asteroids) state
+  (with-slots (players asteroids projectiles) state
     (append
      (check-collisions-between players players)
-     (check-collisions-between players asteroids))))
+     (check-collisions-between players asteroids)
+     (check-collisions-between asteroids projectiles))))
 
 (defun update-state (state)
   (with-slots (players asteroids projectiles) state
@@ -232,8 +236,19 @@
     (recalc-players players)
     (recalc-projectiles projectiles)
     (let ((collisions (check-collisions state)))
-                                        ;do something with colliding objects
-      collisions)))
+      (with-collisions state collisions))))
+
+(defun objects-from-type (state type)
+  (case type
+    (player (players-of state))
+    (asteroid (asteroids-of state))
+    (projectile (projectiles-of state))))
+
+(defun with-collisions (state col)
+  (mapcar #'(lambda (p)
+              (remhash (car (car p)) (objects-from-type state (second (car p))))
+              (remhash (car (second p)) (objects-from-type state (second (second p))))) col))
+
 
 (defun handle-player-join (player)
   (with-slots (name id) player

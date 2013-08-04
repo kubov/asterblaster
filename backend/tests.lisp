@@ -3,8 +3,9 @@
 (defparameter *test-players* (make-hash-table))
 (defparameter *test-state* (make-instance 'game-state))
 
-(defun make-test-object (type)
+(defun make-test-object (i type)
   (make-instance type
+                 :id i
                  :position (get-random-spot)
                  :direction (make-instance 'pos-vector
                                            :x (/
@@ -19,17 +20,17 @@
          (add-to-hash-table
           players
           i
-          (make-test-object 'player)))
+          (make-test-object i 'player)))
     (loop for i from 5 to 7 do
          (add-to-hash-table
           projectiles
           i
-          (make-test-object 'projectile)))
+          (make-test-object i 'projectile)))
     (loop for i from 10 to 13 do
          (add-to-hash-table
           asteroids
           i
-          (make-test-object 'asteroid)))))
+          (make-test-object i 'asteroid)))))
 
 (defun multiply-by-scalar (vect scalar)
   (with-slots (x y) vect
@@ -63,7 +64,8 @@
       (draw-objects (asteroids-of *test-state*) 20 0 0 255)
       (draw-objects (players-of *test-state*) 10 0 255 0)
       (draw-objects (projectiles-of *test-state*) 5 0 0 0)
-      (update-state *test-state*)
+      (let ((col (update-state *test-state*)))
+        (with-collisions *test-state* col))
       (sleep 1/10))))
 
 (defun run()
