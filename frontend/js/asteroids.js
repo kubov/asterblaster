@@ -2,6 +2,8 @@ var PROJECTILE_RADIUS = 3;
 var STROKE_WIDTH = 2;
 var WIDTH = 600;
 var HEIGHT = 600;
+var RES_WIDTH = 200;
+var RES_HEIGHT = 600;
 
 function Asteroid(x, y, size) {
     this.x = x;
@@ -125,16 +127,16 @@ function rect(x,y,w,h, ctx) {
   ctx.fill();
 };
 
-function clear(ctx) {
-  ctx.clearRect(0, 0, WIDTH, HEIGHT);
-  rect(0,0,WIDTH,HEIGHT, ctx);
+function clear(ctx, width, height) {
+  ctx.clearRect(0, 0, width, height);
+  rect(0,0,width,height, ctx);
 };
 
 function drawState(arr) {
 	if (arr != null) {
 		var ctx = document.getElementById('mycanvas').getContext('2d');
-		ctx.fillStyle = 'black'
-		clear(ctx);
+		ctx.fillStyle = 'black';
+		clear(ctx, WIDTH, HEIGHT);
 		for (i = 0; i < arr.length; ++i) {
 			ctx.save();
 			arr[i].draw(ctx);
@@ -143,17 +145,42 @@ function drawState(arr) {
 	}
 };
 
+function showResults(arr) {
+    if (arr != null) {
+        var ctx = document.getElementById('points').getContext('2d');
+        ctx.fillStyle = 'black';
+        clear(ctx, RES_WIDTH, RES_HEIGHT);
+        for (i = 0; i < arr.length; ++i) {
+            ctx.save();
+            arr[i].draw(ctx, i);
+            ctx.restore();
+        }
+    }
+}
+
+function Result(name, number) {
+    this.name = name;
+    this.number = number;
+}
+
+Result.prototype.draw = function(ctx, i) {
+    ctx.fillStyle = 'green';
+    ctx.font = '12pt Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(this.name + " " + this.number, RES_WIDTH / 2, i * 20 + 10);
+}
+
 function Welcome() {
     this.text = "Asterblaster";
 };
 
 Welcome.prototype.draw = function(ctx) {
-    ctx.fillStyle = 'white';
+    ctx.fillStyle = 'green';
     ctx.font = '41pt Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
-    ctx.fillText(this.text, WIDTH / 2, HEIGHT - 100);
-
+    ctx.fillText(this.text, WIDTH / 2, HEIGHT - 100);  
 };
 
 var bullet_sound = function() {
@@ -165,4 +192,7 @@ var bullet_sound = function() {
 
 var arr1 = [new Asteroid(200, 136, 50), new Asteroid(400, 200, 30), new Spaceship(100, 350, 0, 1, ""), new Spaceship(200, 350, 0, 2, ""), new Spaceship(300, 350, 0, 3, ""), new MySpaceship(400, 350, 0, 1, "Your spaceship"), new Spaceship(500, 350, 0, 1, ""), new Welcome()];
 
+var res = [new Result("danka", 100), new Result("adam", 20)];
+
 drawState(arr1);
+showResults(res);
