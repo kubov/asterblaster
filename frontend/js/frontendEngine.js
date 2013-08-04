@@ -120,8 +120,10 @@ function parseGameObjects(data) {
 		}
 	}
 	if (data["ufo"] != null) {
-		var temp = new UFO(data["ufo"]["position"].x, data["ufo"]["position"].y);
-		objects.push(temp);
+		if (data["ufo"]["alive?"] != null) {
+			var temp = new UFO(data["ufo"]["position"].x, data["ufo"]["position"].y);
+			objects.push(temp);
+		}
 	}
 	drawState(objects);
 	showResults(results);
