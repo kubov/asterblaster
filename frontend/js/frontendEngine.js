@@ -145,7 +145,6 @@ function onKeyPress(evt, status) {
 			break;
 		case SHOT:
 			msgType = "shot";
-			console.log("sho");
 			var snd = new Audio("media/bullet.mp3");
 			snd.play();
 			break;
