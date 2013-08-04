@@ -102,6 +102,7 @@
   ((players)
    (asteroids)
    (projectiles)
+   (ufo)
    (collisions)))
 
 (defparameter *server-message-names-alist*

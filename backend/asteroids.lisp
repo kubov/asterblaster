@@ -7,6 +7,7 @@
 (defparameter *max-speed* 10)
 
 (defparameter *shoot-timeout* 36)
+(defparameter *ufo-shoot-timeout* 36)
 
 (defparameter *projectile-ttl* *shoot-timeout*)
 
@@ -47,13 +48,14 @@
    (radius 30 :type fixnum)
    (direction (get-random-spot) :type pos-vector)))
 
-(defun root-of-unity (k)
-  (make-instance 'pos-vector 
-                 :x (cos (/ (* 2 *pi* k) *root-degree*))
-                 :y (sin (/ (* 2 *pi* k) *root-degree*))))
+(def class* ufo (game-entity)
+  ((position (get-random-spot) :type pos-vector)
+   (speed 0 :type fixnum)
+   (alive? t :type boolean)
+   (radius 10 :type fixnum)
+   (shoot-timeout -1 :type fixnum)
+   (direction (get-random-spot) :type pos-vector)))
 
-(defun cons-to-pos-vector (p)
-  (make-instance 'pos-vector :x (car p) :y (cdr p)))
 
 (def class* player (game-entity)
   ((name "unknown-player" :type string)
@@ -86,13 +88,23 @@
 (def class* game-state ()
   ((players (make-hash-table) :type hash-table)
    (asteroids (make-hash-table) :type hash-table)
-   (projectiles (make-hash-table) :type hash-table)))
+   (projectiles (make-hash-table) :type hash-table)
+   (ufo-projectiles (make-hash-table) :type hash-table)
+   (ufo)))
 
 (defparameter *global-game-state* nil)
 (defparameter *game-state-lock* (bordeaux-threads:make-lock "game state lock"))
 
 (defparameter *test-players* (make-hash-table))
 (defparameter *test-state* (make-instance 'game-state))
+
+(defun root-of-unity (k)
+  (make-instance 'pos-vector 
+                 :x (cos (/ (* 2 *pi* k) *root-degree*))
+                 :y (sin (/ (* 2 *pi* k) *root-degree*))))
+
+(defun cons-to-pos-vector (p)
+  (make-instance 'pos-vector :x (car p) :y (cdr p)))
 
 
 (defun make-random-object (type)
@@ -108,12 +120,21 @@
 
 (defun generate-initial-state ()
   (let ((state (make-instance 'game-state)))
-    (with-slots (asteroids) state
+    (with-slots (asteroids ufo) state
       (loop for i from 0 to 3 do
            (let ((a (make-random-object 'asteroid))
                  (new-id (incf *asteroid-id-seq*)))
              (setf (id-of a) new-id)
-             (add-to-hash-table asteroids new-id a))))
+             (add-to-hash-table asteroids new-id a)))
+      (setf ufo (make-instance 'ufo 
+                               :position (get-random-spot)
+                               :direction (make-instance 'pos-vector
+                                                         :x (/
+                                                             (- (random 20) 10) 2.0)
+                                                         :y (/
+                                                             (- (random 20) 10) 2.0))
+                               :speed (+ 0.5 (random 0.5))
+                               :alive? t)))
     state))
 
 
@@ -202,7 +223,7 @@
 
 (defun recalc-asteroid (asteroid-id asteroid)
   (declare (ignore asteroid-id))
-  (with-slots (position speed direction) asteroid
+  (with-slots (position direction) asteroid
     (setf position (mod-vector (add-pos-vectors position direction)))))
 
 (defun recalc-projectile (projectile-id projectile)
@@ -248,32 +269,43 @@
      (mod (+ (/ *canvas-w* 2) x) *canvas-h*)
      (mod (+ (/ *canvas-h* 2) y) *canvas-w*))))
 
-(defun find-collisions-between (hash1 hash2)
-  (loop for key1 being the hash-key in hash1
-     for value1 being the hash-value in hash1
+(defun find-collisions-between (list1 list2)
+  (loop for value1 in list1
      when (alive? value1)
-     append (loop for key2 being the hash-key in hash2
-               for value2 being the hash-value in hash2
+     append (loop for value2 in list2
                when (and (alive? value2)  (colliding? value1 value2))
                collect (list value1
                              value2))))
 
 (defun find-collisions (state)
-  (with-slots (players asteroids projectiles) state
+  (with-slots (players asteroids projectiles ufo-projectiles) state
     (let ((player-asteroid-collisions
-           (find-collisions-between players asteroids))
-          (asteroid-projectile-colissions 
-           (find-collisions-between asteroids projectiles)))
+           (find-collisions-between 
+            (hash-table-values players) 
+            (hash-table-values asteroids)))
+          (asteroid-projectile-collissions 
+           (find-collisions-between (hash-table-values asteroids) 
+                                    (append (hash-table-values ufo-projectiles)
+                                            (hash-table-values projectiles))))
+          (player-ufo-projectile-collisions
+           (find-collisions-between (hash-table-values players)
+                                    (hash-table-values ufo-projectiles))))
       (loop for col in player-asteroid-collisions
          do (destructuring-bind (player asteroid) col
               (setf (alive? player) nil)
               (break-asteroid state asteroid)))
-      (loop for col in asteroid-projectile-colissions
+      (loop for col in asteroid-projectile-collissions
          do (destructuring-bind (asteroid projectile) col
               (setf (alive? projectile) nil)
-              (incf (score-of (get-object 'player (owner-of projectile))))
+              (unless (minusp (owner-of projectile))
+                ;; we don't score ufo
+                (incf (score-of (get-object 'player (owner-of projectile)))))
               (break-asteroid state asteroid)))
-      (nconc player-asteroid-collisions asteroid-projectile-colissions))))
+      (loop for col in player-ufo-projectile-collisions
+         do (destructuring-bind (player projectile) col
+              (setf (alive? player) nil)
+              (setf (alive? projectile) nil)))
+      #+nil(nconc player-asteroid-collisions asteroid-projectile-collissions))))
 
 (defun break-asteroid (state asteroid)
   (setf (alive? asteroid) nil)
@@ -326,12 +358,42 @@
            ((> shoot-timeout 0) (decf shoot-timeout))
            (t nil)))))
 
+(defun recalc-ufo (ufo ufo-projectiles)
+  (with-slots (position direction shoot-timeout) ufo
+    (setf position (mod-vector (add-pos-vectors position direction)))
+    (unless (minusp shoot-timeout)
+      (if (zerop shoot-timeout)
+          (let ((new-id (incf *projectile-id-seq*)))
+            (setf (gethash new-id ufo-projectiles)
+                  (make-instance 'projectile
+                                 :id new-id
+                                 :owner -1 ;;ufo
+                                 :position (make-instance 'pos-vector
+                                                            :x (x-of position)
+                                                            :y (y-of position))
+                                 :direction (root-of-unity (random *root-degree*))))
+            (setf shoot-timeout *ufo-shoot-timeout*))
+          (decf shoot-timeout)))))
+
+(defun toggle-ufo (ufo)
+  (with-slots (alive? shoot-timeout) ufo
+    (if alive?
+        (progn 
+          (setf alive? nil
+                shoot-timeout -1))
+        (progn 
+          (setf alive? t
+                shoot-timeout *ufo-shoot-timeout*)))))
+
 (defun update-state (state)
-  (with-slots (players asteroids projectiles) state
+  (with-slots (players asteroids projectiles ufo-projectiles ufo) 
+      state
     (recalc-asteroids asteroids)
     (recalc-players players)
     (maybe-shoot-projectiles players projectiles)
     (recalc-projectiles projectiles)
+    (recalc-projectiles ufo-projectiles)
+    (recalc-ufo ufo ufo-projectiles)
     (find-collisions state)))
 
 (defun objects-from-type (state type)
@@ -438,13 +500,14 @@
                                                               :id (id-of player)))))
                (sleep 2)))
            
-           (with-slots (players asteroids projectiles) *global-game-state*
+           (with-slots (players asteroids projectiles ufo) *global-game-state*
              (setf collisions (update-state *global-game-state*))
              (setf json (encode-json-to-string
                          (make-server-message 'state-server-message
                                               :players players
                                               :asteroids asteroids
                                               :projectiles projectiles
+                                              :ufo ufo
                                               :collisions '())))))
          (with-lock-held (*client-db-lock*)
            (setf clients (hash-table-values *connected-clients*)))
