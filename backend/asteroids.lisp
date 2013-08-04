@@ -1,7 +1,7 @@
 (in-package :asterblaster)
 
-(defparameter *canvas-w* 200)
-(defparameter *canvas-h* 200)
+(defparameter *canvas-w* 700)
+(defparameter *canvas-h* 700)
 
 (def class* pos-vector ()
   ((x 0 :type fixnum)
@@ -16,8 +16,8 @@
   ;;stub
   (get-random-spot))
 
-(defun get-stanard-spot ()
-  (make-instance 'pos-vector))
+(defun get-standard-spot ()
+  (make-instance 'pos-vector :x 0 :y 0))
 
 (def class* asteroid ()
   ((position (get-random-spot) :type pos-vector)
@@ -30,14 +30,14 @@
   ((name :type string)
    (speed 0 :type fixnum)
    (radius 20 :type fixnum)
-   (direction (get-stanard-spot) :type pos-vector)
+   (direction (get-standard-spot) :type pos-vector)
    (position (find-free-spot) :type pos-vector)))
 
 (def class* projectile ()
-  ((position (get-stanard-spot) :type pos-vector)
+  ((position (get-standard-spot) :type pos-vector)
    (radius 2 :type fixnum)
    (speed 10 :type fixnum)
-   (direction (get-stanard-spot) :type pos-vector)))
+   (direction (get-standard-spot) :type pos-vector)))
 
 (def class* game-state ()
   ((players (make-hash-table) :type hash-table)
@@ -52,8 +52,8 @@
 
 (defun make-test-object (type)
   (make-instance type
-                 :position (get-random-spot)
-                 :direction (get-random-spot)
+                 :position (get-standard-spot)
+                 :direction (get-standard-spot)
                  :speed (/ (random 11) 10)))
 
 (defun init-test ()
@@ -90,7 +90,6 @@
   (setf (gethash key hash) elem))
 
 (defun recalc-player (player-id player)
-  (declare (ignore player-id))
   (with-slots (position speed direction) player
     (recalc-pos-vector position direction speed)))
 
@@ -122,13 +121,14 @@
     (with-slots ((pos2 position) (r2 radius)) obj2
       (with-slots ((x1 x) (y1 y)) pos1
         (with-slots ((x2 x) (y2 y)) pos2
+          (format t "~A ~A~%" (distance x1 y1 x2 y2) (+ r1 r2))
           (< (distance x1 y1 x2 y2) (+ r1 r2)))))))
 
-(defun f (position)
+(defun transform-cords (position)
   (with-slots (x y) position
     (list
-     (+ (/ *canvas-w* 2) x)
-     (+ (/ *canvas-h* 2) y))))
+     (mod (+ (/ *canvas-w* 2) x) *canvas-h*)
+     (mod (+ (/ *canvas-h* 2) y) *canvas-w*))))
 
 (defun check-collisions-between (hash1 hash2)
   (loop for key1 being the hash-key in hash1
@@ -145,13 +145,13 @@
      (check-collisions-between players asteroids))))
 
 (defun update-state (state)
-  (with-slots (players asteroids projectiles) *global-game-state*
+  (with-slots (players asteroids projectiles) state
     (recalc-asteroids asteroids)
     (recalc-players players)
     (recalc-projectiles projectiles)
     (let ((collisions (check-collisions state)))
                                         ;do something with colliding objects
-      (identity collisions))))
+      collisions)))
 
 (defun handle-player-join (player)
   (with-slots (name id) player
