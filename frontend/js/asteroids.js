@@ -10,8 +10,18 @@ function Asteroid(x, y, size) {
 };
 
 Asteroid.prototype.draw = function(ctx) {
+    var k = this.size / 4;
     ctx.beginPath();
-    ctx.arc(this.x, this.y, this.size, 0, 2 * Math.PI, false);
+    ctx.translate(this.x, this.y);
+    ctx.moveTo(0 * k, 4 * k);
+    ctx.lineTo(-4 * k, 0 * k);
+    ctx.lineTo(-2 * k, -3 * k);
+    ctx.lineTo(-2 * k, -5 * k);
+    ctx.lineTo(-1 * k, -3 * k);
+    ctx.lineTo(2 * k, -3 * k);
+    ctx.lineTo(3 * k, -4 * k);
+    ctx.lineTo(3 * k, 1 * k);
+    ctx.lineTo(1 * k, 2 * k);
     ctx.closePath();
     ctx.lineWidth = STROKE_WIDTH;
     ctx.strokeStyle = 'white';
@@ -126,8 +136,6 @@ var bullet_sound = function() {
     var snd = new Audio("media/bullet.mp3");
     snd.play();
 };
-
-// document.getElementById('strzel').click(bullet_sound);
 
 var arr1 = [new Asteroid(200, 136, 50), new Spaceship(180, 180, Math.PI/180*35, 1), new Projectile(80, 80), new Explosion(100, 100), new MySpaceship(80, 80, Math.PI/180*35, 2)];
 
