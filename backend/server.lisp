@@ -102,6 +102,7 @@
   ((players)
    (asteroids)
    (projectiles)
+   (ufo-projectiles)
    (ufo)
    (collisions)))
 

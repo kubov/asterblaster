@@ -54,6 +54,7 @@
    (alive? t :type boolean)
    (radius 10 :type fixnum)
    (shoot-timeout -1 :type fixnum)
+   (toggle-timeout 300 :type fixnum)
    (direction (get-random-spot) :type pos-vector)))
 
 
@@ -134,7 +135,7 @@
                                                          :y (/
                                                              (- (random 20) 10) 2.0))
                                :speed (+ 0.5 (random 0.5))
-                               :alive? t)))
+                               :alive? nil)))
     state))
 
 
@@ -278,7 +279,7 @@
                              value2))))
 
 (defun find-collisions (state)
-  (with-slots (players asteroids projectiles ufo-projectiles) state
+  (with-slots (players asteroids projectiles ufo ufo-projectiles) state
     (let ((player-asteroid-collisions
            (find-collisions-between 
             (hash-table-values players) 
@@ -289,7 +290,10 @@
                                             (hash-table-values projectiles))))
           (player-ufo-projectile-collisions
            (find-collisions-between (hash-table-values players)
-                                    (hash-table-values ufo-projectiles))))
+                                    (hash-table-values ufo-projectiles)))
+          (ufo-player-projectile-collisions
+           (find-collisions-between (list ufo)
+                                    (hash-table-values projectiles))))
       (loop for col in player-asteroid-collisions
          do (destructuring-bind (player asteroid) col
               (setf (alive? player) nil)
@@ -305,6 +309,10 @@
          do (destructuring-bind (player projectile) col
               (setf (alive? player) nil)
               (setf (alive? projectile) nil)))
+      (loop for col in ufo-player-projectile-collisions
+         do (destructuring-bind (ufo projectile) col
+              (toggle-ufo ufo)
+              (incf (score-of (get-object 'player (owner-of projectile))) 10))) 
       #+nil(nconc player-asteroid-collisions asteroid-projectile-collissions))))
 
 (defun break-asteroid (state asteroid)
@@ -376,13 +384,15 @@
           (decf shoot-timeout)))))
 
 (defun toggle-ufo (ufo)
-  (with-slots (alive? shoot-timeout) ufo
+  (with-slots (alive? shoot-timeout toggle-timeout) ufo
     (if alive?
         (progn 
           (setf alive? nil
+                toggle-timeout 300
                 shoot-timeout -1))
         (progn 
           (setf alive? t
+                toggle-timeout 150
                 shoot-timeout *ufo-shoot-timeout*)))))
 
 (defun update-state (state)
@@ -499,14 +509,20 @@
                                          (make-server-message 'hello-reply-message
                                                               :id (id-of player)))))
                (sleep 2)))
+           ;; toggle ufo?
+           (if (zerop (toggle-timeout-of (ufo-of *global-game-state*)))
+               (toggle-ufo (ufo-of *global-game-state*))
+               (decf (toggle-timeout-of (ufo-of *global-game-state*))))
            
-           (with-slots (players asteroids projectiles ufo) *global-game-state*
+           (with-slots (players asteroids projectiles ufo-projectiles ufo) 
+               *global-game-state*
              (setf collisions (update-state *global-game-state*))
              (setf json (encode-json-to-string
                          (make-server-message 'state-server-message
                                               :players players
                                               :asteroids asteroids
                                               :projectiles projectiles
+                                              :ufo-projectiles ufo-projectiles
                                               :ufo ufo
                                               :collisions '())))))
          (with-lock-held (*client-db-lock*)
