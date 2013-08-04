@@ -10,7 +10,7 @@
 (defun get-client-by-id (id)
   (gethash id *connected-clients*))
 
-(defparameter *client-to-id* (make-hash-table))
+(defparameter *client-to-id* (make-hash-table :test 'equal))
 
 (defun client-address (client)
   (format nil "~A:~D" 
@@ -25,13 +25,15 @@
 
 (defmethod resource-received-text ((res api-resource) client json)
   (format t "[got message: ~S]~%" json)
-  (write-to-client-text client json)
   (let ((message (json-to-client-message json)))
     (ecase (type-of message)
       (hello-client-message 
-       (send-state-update 'user-join-message 
-                          :name (name-of message)
-                          :id (client-id client))))))
+       (let ((id (client-id client)))
+         (send-state-update 'user-join-message 
+                            :name (name-of message)
+                            :id id)
+         (send-to-client client (make-server-message 'hello-reply-message
+                                                     :id id)))))))
 
 (defmethod resource-client-connected ((res api-resource) client)
   (format t "[connection on api server from ~s : ~s]~%"
@@ -53,11 +55,15 @@
   ((msg-type "unknown" :type string)
    (data nil)))
 
+(def class* hello-reply-message ()
+  ((id)))
+
 (def class* ping-server-message ()
   ())
 
 (defparameter *server-message-names-alist*
-  '((ping-server-message . "ping")))
+  '((ping-server-message . "ping")
+    (hello-reply-message . "helloReply")))
 
 (defun class-to-msg-type (class)
   (assoc-cdr class *server-message-names-alist*))
@@ -67,10 +73,8 @@
                  :msg-type (class-to-msg-type class)
                  :data (apply #'make-instance class args)))
 
-
-(def class* client-message ()
-  ((msg-type "unknown" :type string)
-   (data nil)))
+(defun send-to-client (client message)
+  (write-to-client-text client (encode-json-to-string message)))
 
 (def class* hello-client-message ()
   ((name :type string)))
@@ -97,9 +101,8 @@
                                :test #'equal)))
     (when (or (not msg-type-string) (not msg-class))
       (error "wrong message type"))
-    (make-instance 'client-message :msg-type msg-type-string
-                   :data (apply #'make-instance msg-class 
-                                (alist-plist (assoc-cdr :data alist))))))
+    (apply #'make-instance msg-class 
+           (alist-plist (assoc-cdr :data alist)))))
 
 
 
