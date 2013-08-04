@@ -60,7 +60,7 @@ function onMessage(evt) {
 			mySpaceship = data.data.id;	
 			break;
 		case "state":
-			console.log(data.data);
+			// console.log(data.data);
 			parseGameObjects(data.data);
 			break;
 	}
@@ -109,6 +109,10 @@ function parseGameObjects(data) {
 
 function onKeyDown(evt) {
 	evt.preventDefault();
+	if (evt.keyCode == SHOT) {
+		var snd = new Audio("media/bullet.mp3");
+		snd.play();
+	}
 	if (pressedKeys.indexOf(evt.keyCode) == -1) {
 		pressedKeys.push(evt.keyCode);
 		onKeyPress(evt, "down");
@@ -146,8 +150,6 @@ function onKeyPress(evt, status) {
 			break;
 		case SHOT:
 			msgType = "shot";
-			var snd = new Audio("media/bullet.mp3");
-			snd.play();
 			break;
 	}
 	
