@@ -96,7 +96,7 @@ function parseGameObjects(data) {
 					amIAlive = false;
 				}
 			} else {
-				if (data["players"][key]["alive?"] != null) {c
+				if (data["players"][key]["alive?"] != null) {
 					var temp = new Spaceship(data["players"][key]["position"].x,
 						data["players"][key]["position"].y, data["players"][key].k * multiply,
 						data["players"][key].id, data["players"][key].name);

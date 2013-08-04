@@ -14,6 +14,13 @@ body {
 #content {
 	display: block;
 	margin: 0 auto;
+	text-align: center;
+}
+
+#mycontainer {
+	display: block;
+	width: auto;
+	margin: 0 auto;
 }
 
 .navbar {
