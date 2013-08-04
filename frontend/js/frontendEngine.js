@@ -39,20 +39,9 @@ function onClose(evt) {
 function activateGame() {
 	document.getElementById("message").innerHTML = "Welcome to the game!";
 
+
 	addEventListener('keydown', onKeyDown);
-
-	/*
-	document.onkeydown = onKeyDown;
-	document.onkeyup = onKeyUp;
-
-	
-	window.addEventListener("keydown", function (e) {
-		// space and arrow keys
-		if (usedKeys.indexOf(e.keyCode) > -1) {
-			e.preventDefault();
-		}
-	}, false);
-	*/
+	addEventListener('keyup', onKeyUp);
 }
 
 function joinGame() {
@@ -61,24 +50,10 @@ function joinGame() {
 
 function leaveGame() {
 	connection.close();
-	
-	window.addEventListener("keydown", function (e) {
-		// space and arrow keys
-		if (usedKeys.indexOf(e.keyCode) > -1) {
-			return false;
-		}
-	}, false);
+	addEventListener("keydown", function (e) { return true; });
+	addEventListener("keyup", function (e) { return true; });
 }
 
-function sendMessage() {
-	establishConnection();
-	var jsonMessage2 = {
-		"msgType": "hello",
-		"data": { "name": "Magda" },
-	}
-	console.log(connection);
-	connection.send(jsonMessage2);
-};
 
 function onMessage(evt) {
 	var data = JSON.parse(evt.data);
@@ -87,6 +62,7 @@ function onMessage(evt) {
 			mySpaceship = data.data.id;	
 			break;
 		case "state":
+			console.log(data.data);
 			parseGameObjects(data.data);
 			break;
 	}
@@ -97,19 +73,19 @@ function parseGameObjects(data) {
 	var objects = new Array();
 	if (data["asteroids"] != null) {
 		for (var key in data["asteroids"]) {
-			var temp = new Asteroid(data["asteroids"][key].position.x,
-				data["asteroids"][key].position.y, data["asteroids"][key].size)
+			var temp = new Asteroid(data["asteroids"][key]["position"].x,
+				data["asteroids"][key]["position"].y, 10)
 			objects.push(temp);
 		}
 	}
 	if (data["players"] != null) {
 		for (var key in data["players"]) {
 			if (key == mySpaceship) {
-				var temp = new MySpaceship(data["players"][key].position.x,
-					data["players"][key].position.y, data["players"][key].radius, data["players"][key].id);
+				var temp = new MySpaceship(data["players"][key]["position"].x,
+					data["players"][key]["position"].y, data["players"][key].radius, data["players"][key].id);
 			} else {
-				var temp = new Spaceship(data["players"][key].position.x,
-					data["players"][key].position.y, data["players"][key].radius, data["players"][key].id);
+				var temp = new Spaceship(data["players"][key]["position"].x,
+					data["players"][key]["position"].y, data["players"][key].radius, data["players"][key].id);
 
 			}
 			objects.push(temp);
@@ -117,13 +93,13 @@ function parseGameObjects(data) {
 	}
 	if (data["projectiles"] != null) {
 		for (var key in data["projectiles"]) {
-			var temp = new Projectile(data["projectiles"][key].position.x, data["projectiles"][key].position.y);
+			var temp = new Projectile(data["projectiles"][key]["position"].x, data["projectiles"][key]["position"].y);
 			objects.push(temp);
 		}
 	}
 	if (data["collisions"] != null) {
 		for (var key in data["collisions"]) {
-			var temp = new Projectile(data["collisions"][key].position.x, data["collisions"][key].position.y);
+			var temp = new Projectile(data["collisions"][key]["position"].x, data["collisions"][key]["position"].y);
 			objects.push(temp);
 		}
 	}
@@ -141,12 +117,13 @@ function onKeyDown(evt) {
 }
 
 function onKeyUp(evt) {
+	evt.preventDefault();
 	var i = pressedKeys.indexOf(evt.keyCode);
 	if (i > -1) {
 		pressedKeys.splice(i, 1);
 		onKeyPress(evt, "up");
 	}
-
+	return false;
 }
 
 function onKeyPress(evt, status) {
@@ -166,6 +143,9 @@ function onKeyPress(evt, status) {
 			break;				
 		case MOVE_UP:
 			msgType = "accelerate";
+			break;
+		case SHOT:
+			msgType = "shot";
 			break;
 	}
 	
