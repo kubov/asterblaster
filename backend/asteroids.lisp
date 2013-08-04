@@ -163,7 +163,9 @@
              (return-from handler))
             (user-join-message
              (format t "handling join~&")
-             (handle-player-join msg))))))
+             (handle-player-join msg))
+            (user-leave-message         ; TODO: implement
+             t))))) 
 
 (defun send-state-to-clients ()
   (loop do 

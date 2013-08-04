@@ -61,7 +61,9 @@
       (if (gethash id *connected-clients*)
           (remhash id *connected-clients*)
           (remhash id *waiting-clients*))
-      (remhash (client-address client) *client-to-id*))))
+      (remhash (client-address client) *client-to-id*))
+    (send-state-update 'user-leave-message
+                       :id id)))
 
 
 (register-global-resource "/api"
@@ -137,6 +139,9 @@
 (def class* user-join-message ()
   ((name)
    (id)))
+
+(def class* user-leave-message ()
+  ((id)))
 
 (defun send-state-update (class &rest args)
   (send *update-state-channel* 
