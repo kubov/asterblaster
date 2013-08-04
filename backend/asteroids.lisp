@@ -5,6 +5,9 @@
 (defparameter *acceleration* 1)
 (defparameter *speed-damping-factor* -2/10)
 (defparameter *max-speed* 10)
+
+(defparameter *shoot-timeout* 36)
+
 (defparameter *root-degree* 36)
 (defparameter *pi* 3.14)
 
@@ -150,8 +153,8 @@
 (defun recalc-pos-vector (current-pos vect speed)
   (let* ((vect (multiply-by-scalar vect speed)))
     (with-slots (x y) current-pos
-      (setf (x-of current-pos) (mod (+ x (x-of vect)) *canvas-w*))
-      (setf (y-of current-pos) (mod (+ y (y-of vect)) *canvas-h* )))))
+      (setf (x-of current-pos) (mod (truncate (+ x (x-of vect))) *canvas-w*))
+      (setf (y-of current-pos) (mod (truncate (+ y (y-of vect))) *canvas-h* )))))
 
 (defun add-to-hash-table (hash key elem)
   (setf (gethash key hash) elem))
@@ -244,10 +247,25 @@
      (check-collisions-between players asteroids)
      (check-collisions-between asteroids projectiles))))
 
+(defun maybe-shoot-projectiles (players projectiles)
+  (loop for player being the hash-value in players 
+     do 
+       (with-slots (position k shoot-timeout) player
+         (cond
+           ((zerop shoot-timeout)
+            (setf (gethash (incf *projectile-id-seq*) projectiles)
+                  (make-instance 'projectile
+                                 :position position
+                                 :direction (root-of-unity k))
+                  shoot-timeout ))
+           ((> shoot-timeout 0) (decf shoot-timeout))
+           (t nil)))))
+
 (defun update-state (state)
   (with-slots (players asteroids projectiles) state
     (recalc-asteroids asteroids)
     (recalc-players players)
+    (maybe-shoot-projectiles players projectiles)
     (recalc-projectiles projectiles)
     (let ((collisions (check-collisions state)))
       (with-collisions state collisions))))
