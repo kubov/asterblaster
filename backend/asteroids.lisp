@@ -94,11 +94,11 @@
   (make-instance type
                  :position (get-random-spot)
                  :direction (make-instance 'pos-vector
-                                           :x (/
+                                           :x (truncate
                                                (- (random 20) 10) 2)
-                                           :y (/
+                                           :y (truncate
                                                (- (random 20) 10) 2))
-                 :speed (/ (random 11) 4)))
+                 :speed (+ 0.8 (random 0.5))))
 
 
 (defun generate-initial-state ()
