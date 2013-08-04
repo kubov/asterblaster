@@ -30,14 +30,14 @@
 (def class* asteroid (game-entity)
   ((position (get-random-spot) :type pos-vector)
    (speed 0 :type fixnum)
-   (radius 60 :type fixnum)
+   (radius 30 :type fixnum)
    (direction (get-random-spot) :type pos-vector)))
 
 
 (def class* player (game-entity)
   ((name :type string)
    (speed 0 :type fixnum)
-   (radius 60 :type fixnum)
+   (radius 30 :type fixnum)
    (accelerating? nil :type boolean)
    (direction (get-standard-spot) :type pos-vector)
    (position (find-free-spot) :type pos-vector)))
@@ -226,6 +226,8 @@
             (user-accelerate-message
              (handle-player-accelarate msg))
             (user-rotate-message
+             t)
+            (user-shot-message
              t)))))
 
 (defun send-state-to-clients ()
@@ -240,7 +242,7 @@
                                               :players players
                                               :asteroids asteroids
                                               :projectiles projectiles
-                                              :collisions collisions)))))
+                                              :collisions '())))))
          (with-lock-held (*client-db-lock*)
            (setf clients (hash-table-values *connected-clients*)))
          (loop for client in clients

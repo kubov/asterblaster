@@ -55,7 +55,10 @@
        (send-state-update 'user-rotate-message
                            :id id
                            :status (status-of message)
-                           :direction (direction-of message))))))
+                           :direction (direction-of message)))
+      (shot-client-message
+       (send-state-update 'user-shot-message
+                          :id id)))))
 
 (defmethod resource-client-connected ((res api-resource) client)
   (format t "[connection on api server from ~s : ~s]~%"
@@ -126,6 +129,10 @@
 (def class* accelerate-client-message ()
   ((status)))
 
+(def class* shot-client-message ()
+  ())
+
+
 (def class* pong-client-message ()
   ())
 
@@ -133,6 +140,7 @@
   '(("hello" . hello-client-message)
     ("rotate" . rotate-client-message)
     ("accelerate" . accelerate-client-message)
+    ("shot" . shot-client-message)
     ("pong" . pong-client-message)))
 
 (defun json-to-client-message (json)
@@ -166,6 +174,9 @@
   ((id)
    (status)
    (direction)))
+
+(def class* user-shot-message ()
+  ((id)))
 
 (defun send-state-update (class &rest args)
   (send *update-state-channel* 
