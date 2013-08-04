@@ -132,7 +132,7 @@ function drawState(arr) {
 };
 
 function Welcome() {
-    this.text = "Asteroids Multiplayer";
+    this.text = "Asterblaster";
 };
 
 Welcome.prototype.draw = function(ctx) {
