@@ -109,7 +109,7 @@
 (defun generate-initial-state ()
   (let ((state (make-instance 'game-state)))
     (with-slots (asteroids) state
-      (loop for i from 0 to 6 do
+      (loop for i from 0 to 3 do
            (let ((a (make-random-object 'asteroid))
                  (new-id (incf *asteroid-id-seq*)))
              (setf (id-of a) new-id)
@@ -426,11 +426,13 @@
                (setf *global-game-state* (generate-initial-state))
                (setf (players-of *global-game-state*) p)
                (loop for player being the hash-value in p
-                  do (with-slots (alive? direction) player
+                  do (with-slots (alive? rotating? accelerating? direction) player
                          (setf alive? t
                                direction (make-instance 'pos-vector
                                                         :x 0.0
-                                                        :y 0.0))
+                                                        :y 0.0)
+                               rotating? nil
+                               accelerating? nil)
                          (send-to-client (get-client-by-id (id-of player))
                                          (make-server-message 'hello-reply-message
                                                               :id (id-of player)))))
