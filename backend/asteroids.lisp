@@ -13,7 +13,7 @@
                  :y (random *canvas-h*)))
 
 (defun find-free-spot ()
-  ;stub
+  ;;stub
   (get-random-spot))
 
 (defun get-stanard-spot ()
@@ -59,20 +59,20 @@
 (defun init-test ()
   (with-slots (players projectiles asteroids) *test-state*
     (loop for i from 0 to 5 do
-       (add-to-hash-table
-        players
-        i
-        (make-test-object 'player)))
+         (add-to-hash-table
+          players
+          i
+          (make-test-object 'player)))
     (loop for i from 5 to 10 do
-       (add-to-hash-table
-        projectiles
-        i
-        (make-test-object 'projectile)))
+         (add-to-hash-table
+          projectiles
+          i
+          (make-test-object 'projectile)))
     (loop for i from 10 to 15 do
-       (add-to-hash-table
-        asteroids
-        i
-        (make-test-object 'asteroid)))))
+         (add-to-hash-table
+          asteroids
+          i
+          (make-test-object 'asteroid)))))
 
 (defun multiply-by-scalar (vect scalar)
   (with-slots (x y) vect
@@ -124,13 +124,33 @@
         (with-slots ((x2 x) (y2 y)) pos2
           (< (distance x1 y1 x2 y2) (+ r1 r2)))))))
 
+(defun f (position)
+  (with-slots (x y) position
+    (cons
+     (+ (/ *canvas-w* 2) x)
+     (+ (/ *canvas-h* 2) y))))
+
+(defun draw-asteroid (nothing astroid)
+  )
+
+
+(defun draw-asteroids (asteroids)
+  (maphash 'draw-asteroid asteroids))
+
+(defun test-draw ()
+  (pal:with-pal (:width *canvas-w* :height *canvas-h* :title "test")
+    (pal:event-loop ()
+      (draw-asteroids (asteroids-of *test-state*))
+      (pal:clear-screen (pal:color 255 255 255))
+      (sleep 1))))
+
 (defun check-collisions-between (hash1 hash2)
   (loop for key1 being the hash-key in hash1
-        for value1 being the hash-value in hash1 do
+     for value1 being the hash-value in hash1 do
        (loop for key2 being the hash-key in hash2
           for value2 being the hash-value in hash2
-            when (colliding? value1 value2)
-            collect (cons key1 key2))))
+          when (colliding? value1 value2)
+          collect (cons key1 key2))))
 
 (defun check-collisions (state)
   (with-slots (players asteroids) state
@@ -144,7 +164,7 @@
     (recalc-players players)
     (recalc-projectiles projectiles)
     (let ((collisions (check-collisions state)))
-      ;do something with colliding objects
+                                        ;do something with colliding objects
       (identity collisions))))
 
 (defun handle-player-join (player)
@@ -168,7 +188,7 @@
              t))))) 
 
 (defun send-state-to-clients ()
-  (loop do 
+  (loop do
        (sleep 1/4)
        (let (json clients)
          (with-lock-held (*game-state-lock*)
