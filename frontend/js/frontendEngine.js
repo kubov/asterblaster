@@ -24,9 +24,10 @@ function establishConnection() {
 
 function onOpen(evt) {
 	console.log("polaczenie otwarte");
+	var userName = document.getElementById("userName").value;
 	var jsonMessage = {
 		"msgType": "hello",
-		"data": { "name": "Magda" },
+		"data": { "name": userName },
 	}
 	connection.send(JSON.stringify(jsonMessage));
 	activateGame();
@@ -37,9 +38,6 @@ function onClose(evt) {
 };
 
 function activateGame() {
-	document.getElementById("message").innerHTML = "Welcome to the game!";
-
-
 	addEventListener('keydown', onKeyDown);
 	addEventListener('keyup', onKeyUp);
 }
@@ -62,7 +60,7 @@ function onMessage(evt) {
 			mySpaceship = data.data.id;	
 			break;
 		case "state":
-			console.log(data.data);
+			//console.log(data.data);
 			parseGameObjects(data.data);
 			break;
 	}
@@ -83,7 +81,7 @@ function parseGameObjects(data) {
 			if (key == mySpaceship) {
 				var temp = new MySpaceship(data["players"][key]["position"].x,
 					data["players"][key]["position"].y, data["players"][key].radius, data["players"][key].id);
-				console.log(data["players"][key].speed);
+				//console.log(data["players"][key].speed);
 			} else {
 				var temp = new Spaceship(data["players"][key]["position"].x,
 					data["players"][key]["position"].y, data["players"][key].radius, data["players"][key].id);
@@ -147,6 +145,8 @@ function onKeyPress(evt, status) {
 			break;
 		case SHOT:
 			msgType = "shot";
+			var snd = new Audio("media/bullet.mp3");
+			snd.play();
 			break;
 	}
 	
@@ -157,7 +157,7 @@ function onKeyPress(evt, status) {
 			"data": data
 		}
 		connection.send(JSON.stringify(json));
-		console.log(JSON.stringify(json));
+		//console.log(JSON.stringify(json));
 	}
 
 	
