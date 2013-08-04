@@ -163,7 +163,7 @@
 (defun handle-player-leave (msg)
   (with-slots (id) msg
     (with-slots (players) *global-game-state*
-      (remhash players id))))
+      (remhash id players))))
 
 (defun update-game-state ()
   (block handler

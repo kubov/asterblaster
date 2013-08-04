@@ -36,6 +36,9 @@
     (ecase (type-of message)
       (hello-client-message 
        (let ((id (client-id client)))
+         (unless id 
+           (format t "id: ~A???~%" id)
+           (return-from resource-received-text))
          (with-lock-held (*client-db-lock*)
            (remhash id *waiting-clients*)
            (setf (gethash id *connected-clients*) client))
@@ -43,7 +46,11 @@
                             :name (name-of message)
                             :id id)
          (send-to-client client (make-server-message 'hello-reply-message
-                                                     :id id)))))))
+                                                     :id id))))
+      (accelerate-client-message 
+       t)
+      (rotate-client-message
+       t))))
 
 (defmethod resource-client-connected ((res api-resource) client)
   (format t "[connection on api server from ~s : ~s]~%"
@@ -57,6 +64,8 @@
 (defmethod resource-client-disconnected ((resource api-resource) client)
   (format t "[disconnected from resource ~A: ~A]~%" resource client)
   (let ((id (client-id client)))
+    (unless id
+      (return-from resource-client-disconnected))
     (with-lock-held (*client-db-lock*)
       (if (gethash id *connected-clients*)
           (remhash id *connected-clients*)
@@ -106,10 +115,11 @@
   ((name :type string)))
 
 (def class* rotate-client-message ()
-  ((direction)))
+  ((status)
+   (direction)))
 
 (def class* accelerate-client-message ()
-  ((throttle)))
+  ((status)))
 
 (def class* pong-client-message ()
   ())

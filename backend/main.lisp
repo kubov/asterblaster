@@ -9,6 +9,7 @@
   (setf *connected-clients* (make-hash-table))
   (setf *client-to-id* (make-hash-table :test 'equal))
   (setf *waiting-clients* (make-hash-table))
+  (setf *global-game-state* (make-instance 'game-state))
   (setf *server-thread* (bordeaux-threads:make-thread 
                          (lambda ()
                            (run-server 13373))
