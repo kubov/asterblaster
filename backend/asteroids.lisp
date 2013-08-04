@@ -3,7 +3,7 @@
 (defparameter *canvas-w* 600)
 (defparameter *canvas-h* 600)
 
-(def class* pos-vector ()
+(def class* pos-vector (game-entity)
   ((x 0 :type fixnum)
    (y 0 :type fixnum)))
 
@@ -19,14 +19,22 @@
 (defun get-standard-spot ()
   (make-instance 'pos-vector :x 0 :y 0))
 
-(def class* asteroid ()
+(def class* game-entity () ())
+
+(defmethod print-object ((object game-entity) stream)
+  (print-unreadable-object (object stream) 
+    (format stream "~s ~s" (type-of object)
+            (loop for i in (get-slots object)
+               collect (cons i (slot-value object i))))))
+
+(def class* asteroid (game-entity)
   ((position (get-random-spot) :type pos-vector)
    (speed 0 :type fixnum)
    (radius 60 :type fixnum)
-   (direction (get-random-spot) :type pos-vector)
-   (size :type fixnum)))
+   (direction (get-random-spot) :type pos-vector)))
 
-(def class* player ()
+
+(def class* player (game-entity)
   ((name :type string)
    (speed 0 :type fixnum)
    (radius 60 :type fixnum)
@@ -34,7 +42,7 @@
    (direction (get-standard-spot) :type pos-vector)
    (position (find-free-spot) :type pos-vector)))
 
-(def class* projectile ()
+(def class* projectile (game-entity)
   ((position (get-standard-spot) :type pos-vector)
    (radius 2 :type fixnum)
    (speed 10 :type fixnum)
@@ -45,7 +53,7 @@
    (asteroids (make-hash-table) :type hash-table)
    (projectiles (make-hash-table) :type hash-table)))
 
-(defparameter *global-game-state* (make-instance 'game-state))
+(defparameter *global-game-state* nil)
 (defparameter *game-state-lock* (bordeaux-threads:make-lock "game state lock"))
 
 (defparameter *test-players* (make-hash-table))
@@ -64,12 +72,14 @@
 
 
 (defun generate-initial-state ()
-  (with-slots (asteroids) *global-game-state*
-    (loop for i from 0 to 6 do
-         (add-to-hash-table
-          asteroids
-          i
-          (make-random-object 'asteroid)))))
+  (let ((state (make-instance 'game-state)))
+    (with-slots (asteroids) state
+      (loop for i from 0 to 6 do
+           (add-to-hash-table
+            asteroids
+            i
+            (make-random-object 'asteroid))))
+    state))
 
 
 (defun get-object (type id)
@@ -94,16 +104,25 @@
   (setf (gethash key hash) elem))
 
 (defun recalc-player (player-id player)
+  (declare (ignore player-id))
   (with-slots (position speed direction accelerating?) player
-    (recalc-pos-vector position direction speed)
     (if accelerating?
-        (incf speed 1)
-        (setf speed (if (>= speed 0.5)
-                        (- speed 0.5)
-                        0)))))
+        (incf speed 2)
+        (setf speed (if (>= speed 1)
+                        (- speed 1)
+                        0)))
+    (recalc-pos-vector position direction speed)))
 
 (defun recalc-asteroid (asteroid-id asteroid)
-  (recalc-player asteroid-id asteroid))
+  (declare (ignore asteroid-id))
+  (with-slots (position speed direction) asteroid
+    (recalc-pos-vector position direction speed)))
+
+(defun recalc-projectile (projectile-id projectile)
+  (declare (ignore projectile-id))
+  (with-slots (position speed direction) projectile
+    (recalc-pos-vector position direction speed)))
+
 
 (defun recalc-players (players)
   (maphash 'recalc-player players))
@@ -112,7 +131,7 @@
   (maphash 'recalc-asteroid asteroids))
 
 (defun recalc-projectiles (projectiles)
-  (recalc-players projectiles))
+  (maphash 'recalc-asteroid projectiles))
 
 (defun square (x)
   (* x x))
@@ -167,7 +186,11 @@
 (defun handle-player-join (player)
   (with-slots (name id) player
     (with-slots (players) *global-game-state*
-      (let ((p (make-instance 'player :name name)))
+      (let ((p (make-instance 'player 
+                              :name name
+                              :direction (make-instance 'pos-vector
+                                                        :x 1
+                                                        :y 0))))
         (add-to-hash-table players id p))))
   t)
 
@@ -178,7 +201,7 @@
 
 (defun handle-player-accelarate (msg)
   (with-slots (id status) msg
-    (with-slots (accelerating?) (get-object'player id)
+    (with-slots (accelerating?) (get-object 'player id)
       (cond
         ((equal status "down") (setf accelerating? t))
         ((equal status "up") (setf accelerating? nil))))))
@@ -198,21 +221,22 @@
             (user-leave-message         ; TODO: implement
              (handle-player-leave msg))
             (user-accelerate-message
-             t)
+             (handle-player-accelarate msg))
             (user-rotate-message
              t)))))
 
 (defun send-state-to-clients ()
   (loop do
        (sleep 1/4)
-       (let (json clients)
+       (let ((collisions (update-state *global-game-state*))
+             json clients)
          (with-lock-held (*game-state-lock*)
            (with-slots (players asteroids projectiles) *global-game-state*
              (setf json (encode-json-to-string
                          (make-server-message 'state-server-message
                                               :players players
                                               :asteroids asteroids
-                                              :projectiles projectiles
+                                              :projectiles collisions
                                               :collisions '())))))
          (with-lock-held (*client-db-lock*)
            (setf clients (hash-table-values *connected-clients*)))
