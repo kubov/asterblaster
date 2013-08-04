@@ -32,6 +32,8 @@
             (loop for i in (get-slots object)
                collect (cons i (slot-value object i))))))
 
+(defparameter *asteroid-id-seq* 0)
+
 (def class* asteroid (game-entity)
   ((position (get-random-spot) :type pos-vector)
    (speed 0 :type fixnum)
@@ -59,7 +61,11 @@
    (rotation-direction nil :type boolean)
    (accelerating? nil :type boolean)
    (direction (make-instance 'pos-vector :x 0 :y 0) :type pos-vector)
-   (position (find-free-spot) :type pos-vector)))
+   (position (find-free-spot) :type pos-vector)
+   (shooting? nil :type boolean)
+   (shoot-timeout -1 :type fixnum)))
+
+(defparameter *projectile-id-seq* 0)
 
 (def class* projectile (game-entity)
   ((position (get-standard-spot) :type pos-vector)
@@ -98,7 +104,7 @@
       (loop for i from 0 to 6 do
            (add-to-hash-table
             asteroids
-            i
+            (incf *asteroid-id-seq*)
             (make-random-object 'asteroid))))
     state))
 
@@ -295,12 +301,23 @@
 
 (defun handle-player-rotate (msg)
   (with-slots (id status direction) msg
-    (with-slots (rotating? rotation-direction)
-        (get-object 'player id)
-      (cond
-        ((equal status "down") (setf rotating? t))
-        ((equal status "up") (setf rotating? nil)))
-      (setf rotation-direction (equal direction "right")))))
+    (with-lock-held (*game-state-lock*)
+      (with-slots (rotating? rotation-direction)
+          (get-object 'player id)
+        (cond
+          ((equal status "down") (setf rotating? t))
+          ((equal status "up") (setf rotating? nil)))
+        (setf rotation-direction (equal direction "right"))))))
+
+(defun handle-player-shoot (msg)
+  (with-slots (id status) msg
+    (let ((is-shooting (equal status "down")))
+      (with-lock-held (*game-state-lock*) 
+        (with-slots (shooting? shoot-timeout) (get-object 'player id)
+          (setf shooting? is-shooting
+                shoot-timeout (if is-shooting 
+                                   (max shoot-timeout 0)
+                                   -1)))))))
 
 (defun update-game-state ()
   (block handler
@@ -319,7 +336,7 @@
             (user-rotate-message
              (handle-player-rotate msg))
             (user-shot-message
-             t)))))
+             (handle-player-shoot msg))))))
 
 (defun send-state-to-clients ()
   (loop do

@@ -10,6 +10,7 @@
   (setf *client-to-id* (make-hash-table :test 'equal))
   (setf *waiting-clients* (make-hash-table))
   (setf *global-game-state* (generate-initial-state))
+  (setf *update-state-channel* (make-instance 'unbounded-channel))
   (setf *server-thread* (bordeaux-threads:make-thread 
                          (lambda ()
                            (run-server 13373))
@@ -27,10 +28,10 @@
                                     :name "client state notifier")))
 
 (defun stop-asterblaster-server ()
-  (sb-thread:destroy-thread *server-thread*)
-  (sb-thread:destroy-thread *resource-listener-thread*)
+  (sb-thread:destroy-thread *send-state-update-thread*)
   (sb-thread:destroy-thread *update-game-state-thread*)
-  (sb-thread:destroy-thread *send-state-update-thread*))
+  (sb-thread:destroy-thread *resource-listener-thread*)
+  (sb-thread:destroy-thread *server-thread*))
 
 (defun restart-asterblaster-server ()
   (stop-asterblaster-server)
