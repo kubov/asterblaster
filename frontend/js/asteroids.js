@@ -131,12 +131,26 @@ function drawState(arr) {
     }
 };
 
+function Welcome() {
+    this.text = "Asteroids Multiplayer";
+};
+
+Welcome.prototype.draw = function(ctx) {
+    ctx.fillStyle = 'white';
+    ctx.font = '41pt Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(this.text, WIDTH / 2, HEIGHT - 100);
+
+};
+
 var bullet_sound = function() {
     var snd = new Audio("media/bullet.mp3");
     snd.play();
 };
 
-var arr1 = [new Asteroid(200, 136, 50), new Spaceship(180, 180, Math.PI/180*35, 1), new Projectile(80, 80), new Explosion(100, 100), new MySpaceship(80, 80, Math.PI/180*35, 2)];
+// var arr1 = [new Asteroid(200, 136, 50), new Spaceship(180, 180, Math.PI/180*35, 1), new Projectile(80, 80), new Explosion(100, 100), new MySpaceship(80, 80, Math.PI/180*35, 2), new Welcome()];
+
+var arr1 = [new Asteroid(200, 136, 50), new Asteroid(400, 200, 30), new Spaceship(100, 350, 0, 1), new Spaceship(200, 350, 0, 2), new Spaceship(300, 350, 0, 3), new MySpaceship(400, 350, 0, 1), new Spaceship(500, 350, 0, 1), new Welcome()];
 
 drawState(arr1);
-
