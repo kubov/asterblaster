@@ -5,17 +5,41 @@
 
 (defvar *user-id-seq* 0)
 
+(defparameter *connected-clients* (make-hash-table))
+
+(defun get-client-by-id (id)
+  (gethash id *connected-clients*))
+
+(defparameter *client-to-id* (make-hash-table))
+
+(defun client-address (client)
+  (format nil "~A:~D" 
+          (client-host client)
+          (client-port client)))
+
+(defun client-id (client)
+  (gethash (client-address client) *client-to-id*))
+
 (defclass api-resource (ws-resource)
   ())
 
-(defmethod resource-received-text ((res api-resource) client message)
-  (format t "[got message: ~S]~%" message)
-  (write-to-client-text client message))
+(defmethod resource-received-text ((res api-resource) client json)
+  (format t "[got message: ~S]~%" json)
+  (write-to-client-text client json)
+  (let ((message (json-to-client-message json)))
+    (ecase (type-of message)
+      (hello-client-message 
+       (send-state-update 'user-join-message 
+                          :name (name-of message)
+                          :id (client-id client))))))
 
 (defmethod resource-client-connected ((res api-resource) client)
   (format t "[connection on api server from ~s : ~s]~%"
           (client-host client) (client-port client))
-  t)
+  (let ((new-id (incf *user-id-seq*)))
+    (setf (gethash new-id *connected-clients*) client)
+    (setf (gethash (client-address client) *client-to-id*)
+          new-id)))
 
 (defmethod resource-client-disconnected ((resource api-resource) client)
   (format t "[disconnected from resource ~A: ~A]~%" resource client))
@@ -85,4 +109,8 @@
 
 (def class* user-join-message ()
   ((name)
-   (id (incf *user-id-seq*))))
+   (id)))
+
+(defun send-state-update (class &rest args)
+  (send *update-state-channel* 
+        (apply #'make-instance class args)))

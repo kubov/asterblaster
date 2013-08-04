@@ -69,8 +69,8 @@
   (block handler
     ;; remember about locking!
     (loop for msg = (recv *update-state-channel*)
-       do (case (type-of msg)
-            (quit-message
+       do (ecase (type-of msg)
+            (stop-message
              (return-from handler))
             (user-join-message
              (format t "handling join~&"))))))

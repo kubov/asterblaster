@@ -1,12 +1,28 @@
 (in-package :asterblaster)
 
+(defvar *server-thread*)
+(defvar *resource-listener-thread*)
+(defvar *update-game-state-thread*)
+
 (defun start-asterblaster-server ()
-  (bordeaux-threads:make-thread (lambda ()
-                                (run-server 13373))
-                                :name "Asterblaster")
-  (bordeaux-threads:make-thread (lambda ()
-                                (run-resource-listener
-                                 (find-global-resource "/api")))
-                              :name "resource listener for /api")
-  (bordeaux-threads:make-thread #'update-game-state
-                                :name "game state updater"))
+  (setf *server-thread* (bordeaux-threads:make-thread 
+                         (lambda ()
+                           (run-server 13373))
+                         :name "Asterblaster"))
+  (setf *resource-listener-thread* (bordeaux-threads:make-thread
+                                    (lambda ()
+                                      (run-resource-listener
+                                       (find-global-resource "/api")))
+                                    :name "resource listener for /api"))
+  (setf *update-game-state-thread* (bordeaux-threads:make-thread 
+                                    #'update-game-state
+                                    :name "game state updater")))
+
+(defun stop-asterblaster-server ()
+  (sb-thread:destroy-thread *server-thread*)
+  (sb-thread:destroy-thread *resource-listener-thread*)
+  (send *update-state-channel* (make-instance 'stop-message)))
+
+(defun restart-asterlaster-server ()
+  (stop-asterblaster-server)
+  (start-asterblaster-server))
