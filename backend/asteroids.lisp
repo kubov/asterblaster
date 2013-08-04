@@ -2,6 +2,8 @@
 
 (defparameter *canvas-w* 600)
 (defparameter *canvas-h* 600)
+(defparameter *polynomial-n* 12)
+(defparameter *pi* 3.14)
 
 (def class* pos-vector (game-entity)
   ((x 0 :type fixnum)
@@ -33,11 +35,20 @@
    (radius 30 :type fixnum)
    (direction (get-random-spot) :type pos-vector)))
 
+(defun polynomial-root (k)
+  (cons (cos (/ (* 2 *pi* k) *polynomial-n*))
+        (sin (/ (* 2 *pi* k) *polynomial-n*))))
+
+(defun cons-to-pos-vector (p)
+  (make-instance 'pos-vector :x (car p) :y (cdr p)))
 
 (def class* player (game-entity)
   ((name :type string)
    (speed 0 :type fixnum)
    (radius 30 :type fixnum)
+   (k 0 :type fixnum)
+   (rotating? nil :type boolean)
+   (rotation-direction nil :type boolean)
    (accelerating? nil :type boolean)
    (direction (get-standard-spot) :type pos-vector)
    (position (find-free-spot) :type pos-vector)))
@@ -105,12 +116,17 @@
 
 (defun recalc-player (player-id player)
   (declare (ignore player-id))
-  (with-slots (position speed direction accelerating?) player
+  (with-slots (rotation-direction k position speed direction accelerating? rotating?) player
     (if accelerating?
         (incf speed 2)
         (setf speed (if (>= speed 1)
                         (- speed 1)
                         0)))
+    (if rotating?
+        (progn
+          (if rotation-direction
+              (decf k) (incf k))
+          (setf direction (cons-to-pos-vector (polynomial-root k)))))
     (recalc-pos-vector position direction speed)))
 
 (defun recalc-asteroid (asteroid-id asteroid)
@@ -209,7 +225,14 @@
           ((equal status "down") (setf accelerating? t))
           ((equal status "up") (setf accelerating? nil)))))))
 
-(defun handle-player-rotate (msg))
+(defun handle-player-rotate (msg)
+  (with-slots (id status direction) msg
+    (with-slots (rotating? rotation-direction)
+        (get-object 'player id)
+      (cond
+        ((equal status "down") (setf rotating? t))
+        ((equal status "up") (setf rotating? nil)))
+      (setf rotation-direction (equal direction "right")))))
 
 (defun update-game-state ()
   (block handler
