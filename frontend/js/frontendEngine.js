@@ -119,6 +119,10 @@ function parseGameObjects(data) {
 			objects.push(temp);
 		}
 	}
+	if (data["ufo"] != null) {
+		var temp = new UFO(data["ufo"]["position"].x, data["ufo"]["position"].y);
+		objects.push(temp);
+	}
 	drawState(objects);
 	showResults(results);
 
