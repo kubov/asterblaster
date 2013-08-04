@@ -27,16 +27,26 @@ Asteroid.prototype.draw = function(ctx) {
     ctx.stroke();
 };
 
-function Spaceship(x, y, rot, id) {
+function Spaceship(x, y, rot, id, name) {
     this.x = x;
     this.y = y;
     this.rot = rot;
     this.id = id;
+    this.name = name;
 };
 
 Spaceship.prototype.spaceship_contour = function(ctx) {
     ctx.beginPath();
     ctx.translate(this.x, this.y);
+
+    //name
+    ctx.fillStyle = 'green';
+    ctx.font = '8pt Arial';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText(this.name, 5, 5);
+
+    // spaceship
     ctx.rotate(- Math.PI / 2);
     ctx.rotate(this.rot);
     ctx.moveTo(-10, -10);
@@ -52,8 +62,8 @@ Spaceship.prototype.draw = function(ctx) {
     ctx.stroke();
 };
 
-function MySpaceship(x, y, rot, id) {
-    Spaceship.call(this, x, y, rot, id);
+function MySpaceship(x, y, rot, id, name) {
+    Spaceship.call(this, x, y, rot, id, name);
 }
 
 MySpaceship.prototype = Object.create(Spaceship.prototype, {
@@ -153,6 +163,6 @@ var bullet_sound = function() {
 
 // var arr1 = [new Asteroid(200, 136, 50), new Spaceship(180, 180, Math.PI/180*35, 1), new Projectile(80, 80), new Explosion(100, 100), new MySpaceship(80, 80, Math.PI/180*35, 2), new Welcome()];
 
-var arr1 = [new Asteroid(200, 136, 50), new Asteroid(400, 200, 30), new Spaceship(100, 350, 0, 1), new Spaceship(200, 350, 0, 2), new Spaceship(300, 350, 0, 3), new MySpaceship(400, 350, 0, 1), new Spaceship(500, 350, 0, 1), new Welcome()];
+var arr1 = [new Asteroid(200, 136, 50), new Asteroid(400, 200, 30), new Spaceship(100, 350, 0, 1, ""), new Spaceship(200, 350, 0, 2, ""), new Spaceship(300, 350, 0, 3, ""), new MySpaceship(400, 350, 0, 1, "Your spaceship"), new Spaceship(500, 350, 0, 1, ""), new Welcome()];
 
 drawState(arr1);
