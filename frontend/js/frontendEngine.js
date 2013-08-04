@@ -2,6 +2,7 @@
 
 var connection = {};
 var mySpaceship;
+var amIAlive = true;
 var usedKeys = [MOVE_UP, MOVE_DOWN, MOVE_LEFT, MOVE_RIGHT, SHOT];
 var pressedKeys = new Array();
 
@@ -44,6 +45,7 @@ function activateGame() {
 
 function joinGame() {
 	establishConnection();
+	amIAlive = true;
 }
 
 function leaveGame() {
@@ -80,16 +82,18 @@ function parseGameObjects(data) {
 	}
 	if (data["players"] != null) {
 		var multiply =  2 * Math.PI * (1 / ROTATION_ANGLE);
-		for (var key in data["players"]) {
-			if (data["players"][key]["alive?"] != null) {
-				if (key == mySpaceship) {
+		for (var key in data["players"]) {	
+			if (key == mySpaceship) {
+				if (data["players"][key]["alive?"] != null) {
 					var temp = new MySpaceship(data["players"][key]["position"].x,
 						data["players"][key]["position"].y, data["players"][key].k * multiply, data["players"][key].id);
-					//console.log(data["players"][key].speed);
 				} else {
+					//amIAlive = false;
+				}
+			} else {
+				if (data["players"][key]["alive?"] != null) {
 					var temp = new Spaceship(data["players"][key]["position"].x,
 						data["players"][key]["position"].y, data["players"][key].k * multiply, data["players"][key].id);
-
 				}
 				objects.push(temp);
 			}
@@ -114,24 +118,28 @@ function parseGameObjects(data) {
 }
 
 function onKeyDown(evt) {
-	evt.preventDefault();
-	if (evt.keyCode == SHOT) {
-		var snd = new Audio("media/bullet.mp3");
-		snd.play();
-	}
-	if (pressedKeys.indexOf(evt.keyCode) == -1) {
-		pressedKeys.push(evt.keyCode);
-		onKeyPress(evt, "down");
+	if (amIAlive) {
+		evt.preventDefault();
+		if (evt.keyCode == SHOT) {
+			var snd = new Audio("media/bullet.mp3");
+			snd.play();
+		}
+		if (pressedKeys.indexOf(evt.keyCode) == -1) {
+			pressedKeys.push(evt.keyCode);
+			onKeyPress(evt, "down");
+		}
 	}
 	return false;
 }
 
 function onKeyUp(evt) {
-	evt.preventDefault();
-	var i = pressedKeys.indexOf(evt.keyCode);
-	if (i > -1) {
-		pressedKeys.splice(i, 1);
-		onKeyPress(evt, "up");
+	if (amIAlive) {
+		evt.preventDefault();
+		var i = pressedKeys.indexOf(evt.keyCode);
+		if (i > -1) {
+			pressedKeys.splice(i, 1);
+			onKeyPress(evt, "up");
+		}
 	}
 	return false;
 }
