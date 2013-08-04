@@ -82,16 +82,17 @@ MySpaceship.prototype = Object.create(Spaceship.prototype, {
     }
 });
 
-function Projectile(x, y) {
+function Projectile(x, y, color) {
     this.x = x;
     this.y = y;
+    this.color = color;
 };
 
 Projectile.prototype.draw = function(ctx) {
     ctx.beginPath();
     ctx.arc(this.x, this.y, PROJECTILE_RADIUS, 0, 2 * Math.PI, false);
     ctx.closePath();
-    ctx.fillStyle = 'white';
+    ctx.fillStyle = this.color;
     ctx.fill();
 }
 
@@ -215,4 +216,4 @@ var arr1 = [new Asteroid(200, 136, 50), new Asteroid(400, 200, 30), new Spaceshi
 var res = [];
 
 drawState(arr1);
-showResults(res);
+showResults([]);
