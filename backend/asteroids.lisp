@@ -29,6 +29,7 @@
    (projectiles (make-hash-table) :type hash-table)))
 
 (defparameter *global-game-state* (make-instance 'game-state))
+(defparameter *game-state-lock* (bordeaux-threads:make-lock "game state lock"))
 
 (defun multiply-by-scalar (vect scalar)
   (with-slots (x y) vect
@@ -77,12 +78,6 @@
         (with-slots (x2 y2) pos2
           (< (distance x1 y1 x2 y2) (+ r1 r2)))))))
 
-(defun check-colisions (state)
-  (with-slots (players asteroids) state
-    (append
-     (check-colisions-between players players)
-     (check-colisions-between players asteroids))))
-
 (defun check-collisions-between (hash1 hash2)
   (loop for key1 being the hash-key in hash1
         for value1 being the hash-value in hash1 do
@@ -90,6 +85,13 @@
           for value2 being the hash-value in hash2
             when (colliding? value1 value2)
             collect (cons key1 key2))))
+
+(defun check-collisions (state)
+  (with-slots (players asteroids) state
+    (append
+     (check-collisions-between players players)
+     (check-collisions-between players asteroids))))
+
 
 (defun update-state ()
   )
@@ -111,3 +113,15 @@
             (user-join-message
              (format t "handling join~&")
              (handle-player-join msg))))))
+
+(defun send-state-to-clients ()
+  (let (json clients)
+    (with-lock-held (*game-state-lock*)
+      (setf json (encode-json-to-string
+                  (make-instance 'server-message
+                                 :msg-type "state"
+                                 :data *global-game-state*))))
+    (with-lock-held (*client-db-lock*)
+      (setf clients (hash-table-values *connected-clients*)))
+    (loop for client in clients
+       do (write-to-client-text client json))))

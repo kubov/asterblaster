@@ -5,10 +5,15 @@
 
 (defvar *user-id-seq* 0)
 
+(defparameter *client-db-lock* (make-lock "client db lock"))
+
+(defparameter *waiting-clients* (make-hash-table))
+
 (defparameter *connected-clients* (make-hash-table))
 
 (defun get-client-by-id (id)
-  (gethash id *connected-clients*))
+  (with-lock-held (*client-db-lock*)
+    (gethash id *connected-clients*)))
 
 (defparameter *client-to-id* (make-hash-table :test 'equal))
 
@@ -18,7 +23,9 @@
           (client-port client)))
 
 (defun client-id (client)
-  (gethash (client-address client) *client-to-id*))
+  (let ((addr (client-address client)))
+    (with-lock-held (*client-db-lock*)
+      (gethash addr *client-to-id*))))
 
 (defclass api-resource (ws-resource)
   ())
@@ -29,6 +36,9 @@
     (ecase (type-of message)
       (hello-client-message 
        (let ((id (client-id client)))
+         (with-lock-held (*client-db-lock*)
+           (remhash id *waiting-clients*)
+           (setf (gethash id *connected-clients*) client))
          (send-state-update 'user-join-message 
                             :name (name-of message)
                             :id id)
@@ -39,9 +49,10 @@
   (format t "[connection on api server from ~s : ~s]~%"
           (client-host client) (client-port client))
   (let ((new-id (incf *user-id-seq*)))
-    (setf (gethash new-id *connected-clients*) client)
-    (setf (gethash (client-address client) *client-to-id*)
-          new-id)))
+    (with-lock-held (*client-db-lock*)
+      (setf (gethash new-id *waiting-clients*) client)
+      (setf (gethash (client-address client) *client-to-id*)
+            new-id))))
 
 (defmethod resource-client-disconnected ((resource api-resource) client)
   (format t "[disconnected from resource ~A: ~A]~%" resource client))
