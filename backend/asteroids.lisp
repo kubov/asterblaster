@@ -105,10 +105,10 @@
   (let ((state (make-instance 'game-state)))
     (with-slots (asteroids) state
       (loop for i from 0 to 6 do
-           (add-to-hash-table
-            asteroids
-            (incf *asteroid-id-seq*)
-            (make-random-object 'asteroid))))
+           (let ((a (make-random-object 'asteroid))
+                 (new-id (incf *asteroid-id-seq*)))
+             (setf (id-of a) new-id)
+             (add-to-hash-table asteroids new-id a))))
     state))
 
 
@@ -249,15 +249,18 @@
 
 (defun maybe-shoot-projectiles (players projectiles)
   (loop for player being the hash-value in players 
+     when (shooting? player)
      do 
        (with-slots (position k shoot-timeout) player
          (cond
-           ((zerop shoot-timeout)
-            (setf (gethash (incf *projectile-id-seq*) projectiles)
-                  (make-instance 'projectile
-                                 :position position
-                                 :direction (root-of-unity k))
-                  shoot-timeout ))
+           ((zerop shoot-timeout) 
+            (let ((new-id (incf *projectile-id-seq*)))
+              (setf (gethash new-id projectiles)
+                    (make-instance 'projectile
+                                   :id new-id
+                                   :position position
+                                   :direction (root-of-unity k))
+                    shoot-timeout *shoot-timeout*)))
            ((> shoot-timeout 0) (decf shoot-timeout))
            (t nil)))))
 
@@ -295,6 +298,7 @@
   (with-slots (name id) player
     (with-slots (players) *global-game-state*
       (let ((p (make-instance 'player 
+                              :id id
                               :name name
                               :direction (make-instance 'pos-vector
                                                         :x 1
