@@ -255,7 +255,7 @@
 
 (defun send-state-to-clients ()
   (loop do
-       (sleep 1/4)
+       (sleep 1/8)
        (let (collisions json clients)
          (with-lock-held (*game-state-lock*)
            (setf collisions (update-state *global-game-state*))

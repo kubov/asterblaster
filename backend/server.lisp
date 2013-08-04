@@ -58,7 +58,8 @@
                            :direction (direction-of message)))
       (shot-client-message
        (send-state-update 'user-shot-message
-                          :id id)))))
+                          :id id
+                          :status (status-of message))))))
 
 (defmethod resource-client-connected ((res api-resource) client)
   (format t "[connection on api server from ~s : ~s]~%"
@@ -130,7 +131,7 @@
   ((status)))
 
 (def class* shot-client-message ()
-  ())
+  ((status)))
 
 
 (def class* pong-client-message ()
@@ -176,7 +177,8 @@
    (direction)))
 
 (def class* user-shot-message ()
-  ((id)))
+  ((id)
+   (status)))
 
 (defun send-state-update (class &rest args)
   (send *update-state-channel* 
