@@ -74,7 +74,7 @@ function parseGameObjects(data) {
 	if (data["asteroids"] != null) {
 		for (var key in data["asteroids"]) {
 			var temp = new Asteroid(data["asteroids"][key]["position"].x,
-				data["asteroids"][key]["position"].y, 10)
+				data["asteroids"][key]["position"].y, data["asteroids"][key].radius)
 			objects.push(temp);
 		}
 	}
@@ -83,6 +83,7 @@ function parseGameObjects(data) {
 			if (key == mySpaceship) {
 				var temp = new MySpaceship(data["players"][key]["position"].x,
 					data["players"][key]["position"].y, data["players"][key].radius, data["players"][key].id);
+				console.log(data["players"][key].speed);
 			} else {
 				var temp = new Spaceship(data["players"][key]["position"].x,
 					data["players"][key]["position"].y, data["players"][key].radius, data["players"][key].id);
@@ -162,24 +163,3 @@ function onKeyPress(evt, status) {
 	
 };
 
-function testMethod() {
-	var json = {
-		"msgType" : "gameState" ,
-		"data" : {
-			"asteroids" : [
-				{ "x" : 10, "y" : 10 },
-				{ "x" : 20, "y" : 20 }
-			],
-			"spaceships" : [
-			],
-			"projectiles" : [
-			],
-			"explosions" : [
-			],
-
-		}
-	}
-	var data = JSON.parse(JSON.stringify(json));
-
-	parseGameObjects(data.data);
-}
