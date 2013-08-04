@@ -58,6 +58,7 @@
 (def class* player (game-entity)
   ((name "unknown-player" :type string)
    (id :type fixnum)
+   (score 0 :type fixnum)
    (speed 0 :type fixnum)
    (alive? t :type boolean)
    (radius 10 :type fixnum)
@@ -76,6 +77,7 @@
   ((position (get-standard-spot) :type pos-vector)
    (radius 2 :type fixnum)
    (id :type fixnum)
+   (owner 0 :type fixnum)
    (alive? t :type boolean)
    (speed 10 :type fixnum)
    (ttl *projectile-ttl* :type fixnum)
@@ -269,6 +271,7 @@
       (loop for col in asteroid-projectile-colissions
          do (destructuring-bind (asteroid projectile) col
               (setf (alive? projectile) nil)
+              (incf (score-of (get-object 'player (owner-of projectile))))
               (break-asteroid state asteroid)))
       (nconc player-asteroid-collisions asteroid-projectile-colissions))))
 
@@ -307,13 +310,14 @@
   (loop for player being the hash-value in players 
      when (and (alive? player) (shooting? player))
      do 
-       (with-slots (position k shoot-timeout) player
+       (with-slots (position k shoot-timeout id) player
          (cond
            ((zerop shoot-timeout) 
             (let ((new-id (incf *projectile-id-seq*)))
               (setf (gethash new-id projectiles)
                     (make-instance 'projectile
                                    :id new-id
+                                   :owner id
                                    :position (make-instance 'pos-vector
                                                             :x (x-of position)
                                                             :y (y-of position))
