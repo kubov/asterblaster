@@ -191,20 +191,23 @@
                               :direction (make-instance 'pos-vector
                                                         :x 1
                                                         :y 0))))
-        (add-to-hash-table players id p))))
+        (with-lock-held (*game-state-lock*)
+          (add-to-hash-table players id p)))))
   t)
 
 (defun handle-player-leave (msg)
   (with-slots (id) msg
     (with-slots (players) *global-game-state*
-      (remhash id players))))
+      (with-lock-held (*game-state-lock*)
+        (remhash id players)))))
 
 (defun handle-player-accelarate (msg)
   (with-slots (id status) msg
     (with-slots (accelerating?) (get-object 'player id)
-      (cond
-        ((equal status "down") (setf accelerating? t))
-        ((equal status "up") (setf accelerating? nil))))))
+      (with-lock-held (*game-state-lock*)
+        (cond
+          ((equal status "down") (setf accelerating? t))
+          ((equal status "up") (setf accelerating? nil)))))))
 
 (defun handle-player-rotate (msg))
 
@@ -228,16 +231,16 @@
 (defun send-state-to-clients ()
   (loop do
        (sleep 1/4)
-       (let ((collisions (update-state *global-game-state*))
-             json clients)
+       (let (collisions json clients)
          (with-lock-held (*game-state-lock*)
+           (setf collisions (update-state *global-game-state*))
            (with-slots (players asteroids projectiles) *global-game-state*
              (setf json (encode-json-to-string
                          (make-server-message 'state-server-message
                                               :players players
                                               :asteroids asteroids
-                                              :projectiles collisions
-                                              :collisions '())))))
+                                              :projectiles projectiles
+                                              :collisions collisions)))))
          (with-lock-held (*client-db-lock*)
            (setf clients (hash-table-values *connected-clients*)))
          (loop for client in clients
