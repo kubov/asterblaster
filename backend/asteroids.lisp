@@ -2,7 +2,9 @@
 
 (defparameter *canvas-w* 600)
 (defparameter *canvas-h* 600)
-(defparameter *polynomial-n* 12)
+(defparameter *acceleration* 5)
+(defparameter *max-speed* 30)
+(defparameter *root-degree* 36)
 (defparameter *pi* 3.14)
 
 (def class* pos-vector (game-entity)
@@ -35,9 +37,10 @@
    (radius 30 :type fixnum)
    (direction (get-random-spot) :type pos-vector)))
 
-(defun polynomial-root (k)
-  (cons (cos (/ (* 2 *pi* k) *polynomial-n*))
-        (sin (/ (* 2 *pi* k) *polynomial-n*))))
+(defun root-of-unity (k)
+  (make-instance 'pos-vector 
+                 :x (cos (/ (* 2 *pi* k) *root-degree*))
+                 :y (sin (/ (* 2 *pi* k) *root-degree*))))
 
 (defun cons-to-pos-vector (p)
   (make-instance 'pos-vector :x (car p) :y (cdr p)))
@@ -50,7 +53,7 @@
    (rotating? nil :type boolean)
    (rotation-direction nil :type boolean)
    (accelerating? nil :type boolean)
-   (direction (get-standard-spot) :type pos-vector)
+   (direction (make-instance 'pos-vector :x 0 :y 0) :type pos-vector)
    (position (find-free-spot) :type pos-vector)))
 
 (def class* projectile (game-entity)
@@ -99,11 +102,37 @@
     (asteroid (gethash id (asteroids-of *global-game-state*)))
     (projectiles (gethash id (projectiles-of *global-game-state*)))))
 
+(defun add-pos-vectors (vect1 vect2)
+  (with-slots ((x1 x) (y1 y)) vect1
+    (with-slots ((x2 x) (y2 y)) vect2
+      (make-instance 'pos-vector
+                     :x (+ x1 x2)
+                     :y (+ y1 y2)))))
+
 (defun multiply-by-scalar (vect scalar)
   (with-slots (x y) vect
     (make-instance 'pos-vector
                    :x (* x scalar)
                    :y (* y scalar))))
+
+(defun vector-length (vect)
+  (with-slots (x y) vect
+    (sqrt (+ (* x x) (* y y)))))
+
+(defun normalize-vector (vect &optional (scalar 1))
+  (with-slots (x y) vect
+    (let ((len (vector-length vect)))
+      (if (zerop len)
+          vect
+          (multiply-by-scalar vect (/ scalar len))))))
+
+(defun mod-vector (vect)
+  (with-slots (x y) vect
+    (setf x (truncate x)
+          y (truncate y))
+    (setf x (mod x *canvas-w*)
+          y (mod y *canvas-h*))
+    vect))
 
 (defun recalc-pos-vector (current-pos vect speed)
   (let* ((vect (multiply-by-scalar vect speed)))
@@ -117,17 +146,24 @@
 (defun recalc-player (player-id player)
   (declare (ignore player-id))
   (with-slots (rotation-direction k position speed direction accelerating? rotating?) player
-    (if accelerating?
-        (incf speed 2)
-        (setf speed (if (>= speed 1)
-                        (- speed 1)
-                        0)))
-    (if rotating?
-        (progn
-          (if rotation-direction
-              (decf k) (incf k))
-          (setf direction (cons-to-pos-vector (polynomial-root k)))))
-    (recalc-pos-vector position direction speed)))
+    (when rotating?
+      (setf k (mod
+               (if rotation-direction
+                   (1- k) 
+                   (1+ k))
+               *root-degree*)))
+    (let* ((vdelta
+            (if accelerating?
+                (multiply-by-scalar (root-of-unity k) *acceleration*)
+                (make-instance 'pos-vector :x 0 :y 0)))
+           (new-dir (add-pos-vectors direction vdelta)))
+      ;; change velocity according to acceleration
+      (setf direction (normalize-vector new-dir
+                                        (min (vector-length new-dir)
+                                             *max-speed*)))
+      ;; slow down because of resistance
+      (setf direction (add-pos-vectors direction (normalize-vector direction -1)))
+      (setf position (mod-vector (add-pos-vectors position direction))))))
 
 (defun recalc-asteroid (asteroid-id asteroid)
   (declare (ignore asteroid-id))
@@ -249,7 +285,7 @@
             (user-accelerate-message
              (handle-player-accelarate msg))
             (user-rotate-message
-             t)
+             (handle-player-rotate msg))
             (user-shot-message
              t)))))
 
