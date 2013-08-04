@@ -36,7 +36,8 @@ function onClose(evt) {
 
 function activateGame() {
 	document.getElementById("message").innerHTML("activated");
-	document.onkeypress = onKeyPress;
+	document.onkeydown = onKeyDown;
+	document.onkeyup = onKeyUp;
 }
 
 function sendMessage() {
@@ -95,20 +96,26 @@ function parseGameObjects(data) {
 }
 
 function onKeyDown(evt) {
-	on
+	onKeyPress(evt, "down");
 }
 
-function onKeyPress(status) {
+function onKeyUp(evt) {
+	onKeyPress(evt, "up");
+}
+
+function onKeyPress(evt, status) {
 	var msgType;
-	var rotateType;
+	var data = {
+		"status": status
+	};
 	switch (evt.keyCode) {
 		case MOVE_LEFT:
 			msgType = "rotate";
-			rotateType = "left";
+			data["direction"] = "left";
 			break;
 		case MOVE_RIGHT:
 			msgType = "rotate";
-			rotateType = "right";
+			data["direction"] = "left";
 			break;			
 		case MOVE_UP:
 			msgType = "accelerate";
@@ -117,12 +124,12 @@ function onKeyPress(status) {
 	
 	if (msgType != undefined)
 	{
+		if (rotateType != undefined) {
+			data["rotateType"] = rotateType
+		}
 		var json = {
 			"msgType": msgType,
-			"data": {
-				"rotate": rotateType,
-				"status": "down"
-			}
+			"data": data
 		}
 		connection.send(JSON.stringify(json));
 	}
