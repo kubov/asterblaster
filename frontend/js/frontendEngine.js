@@ -60,7 +60,7 @@ function onMessage(evt) {
 			mySpaceship = data.data.id;	
 			break;
 		case "state":
-			// console.log(data.data);
+			console.log(data.data);
 			parseGameObjects(data.data);
 			break;
 	}
@@ -71,30 +71,36 @@ function parseGameObjects(data) {
 	var objects = new Array();
 	if (data["asteroids"] != null) {
 		for (var key in data["asteroids"]) {
-			var temp = new Asteroid(data["asteroids"][key]["position"].x,
-				data["asteroids"][key]["position"].y, data["asteroids"][key].radius)
-			objects.push(temp);
+			if (data["asteroids"][key]["alive?"] != null) {
+				var temp = new Asteroid(data["asteroids"][key]["position"].x,
+					data["asteroids"][key]["position"].y, data["asteroids"][key].radius)
+				objects.push(temp);
+			}
 		}
 	}
 	if (data["players"] != null) {
 		var multiply =  2 * Math.PI * (1 / ROTATION_ANGLE);
 		for (var key in data["players"]) {
-			if (key == mySpaceship) {
-				var temp = new MySpaceship(data["players"][key]["position"].x,
-					data["players"][key]["position"].y, data["players"][key].k * multiply, data["players"][key].id);
-				//console.log(data["players"][key].speed);
-			} else {
-				var temp = new Spaceship(data["players"][key]["position"].x,
-					data["players"][key]["position"].y, data["players"][key].k * multiply, data["players"][key].id);
+			if (data["players"][key]["alive?"] != null) {
+				if (key == mySpaceship) {
+					var temp = new MySpaceship(data["players"][key]["position"].x,
+						data["players"][key]["position"].y, data["players"][key].k * multiply, data["players"][key].id);
+					//console.log(data["players"][key].speed);
+				} else {
+					var temp = new Spaceship(data["players"][key]["position"].x,
+						data["players"][key]["position"].y, data["players"][key].k * multiply, data["players"][key].id);
 
+				}
+				objects.push(temp);
 			}
-			objects.push(temp);
 		}
 	}
 	if (data["projectiles"] != null) {
 		for (var key in data["projectiles"]) {
-			var temp = new Projectile(data["projectiles"][key]["position"].x, data["projectiles"][key]["position"].y);
-			objects.push(temp);
+			if (data["projectiles"][key]["alive?"] != null) {
+				var temp = new Projectile(data["projectiles"][key]["position"].x, data["projectiles"][key]["position"].y);
+				objects.push(temp);
+			}
 		}
 	}
 	if (data["collisions"] != null) {
