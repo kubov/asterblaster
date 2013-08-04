@@ -212,7 +212,7 @@ var bullet_sound = function() {
 
 var arr1 = [new Asteroid(200, 136, 50), new Asteroid(400, 200, 30), new Spaceship(100, 350, 0, 1, ""), new Spaceship(200, 350, 0, 2, ""), new Spaceship(300, 350, 0, 3, ""), new MySpaceship(400, 350, 0, 1, "Your spaceship"), new Spaceship(500, 350, 0, 1, ""), new Welcome(), new UFO(300, 300)];
 
-var res = [new Result("danka", 100), new Result("adam", 20)];
+var res = [];
 
 drawState(arr1);
 showResults(res);

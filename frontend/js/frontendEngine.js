@@ -61,7 +61,7 @@ function onMessage(evt) {
 			amIAlive = true;
 			break;
 		case "state":
-			console.log(data.data);
+			//console.log(data.data);
 			parseGameObjects(data.data);
 			break;
 	}
