@@ -138,7 +138,7 @@ function onKeyPress(evt, status) {
 			break;
 		case MOVE_RIGHT:
 			msgType = "rotate";
-			data["direction"] = "left";
+			data["direction"] = "right";
 			break;				
 		case MOVE_UP:
 			msgType = "accelerate";
