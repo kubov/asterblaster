@@ -1,7 +1,7 @@
 (in-package :asterblaster)
 
-(defparameter *canvas-w* 700)
-(defparameter *canvas-h* 700)
+(defparameter *canvas-w* 600)
+(defparameter *canvas-h* 600)
 
 (def class* pos-vector ()
   ((x 0 :type fixnum)
@@ -22,14 +22,15 @@
 (def class* asteroid ()
   ((position (get-random-spot) :type pos-vector)
    (speed 0 :type fixnum)
-   (radius 20 :type fixnum)
+   (radius 60 :type fixnum)
    (direction (get-random-spot) :type pos-vector)
    (size :type fixnum)))
 
 (def class* player ()
   ((name :type string)
    (speed 0 :type fixnum)
-   (radius 20 :type fixnum)
+   (radius 60 :type fixnum)
+   (accelerating? nil :type boolean)
    (direction (get-standard-spot) :type pos-vector)
    (position (find-free-spot) :type pos-vector)))
 
@@ -50,29 +51,32 @@
 (defparameter *test-players* (make-hash-table))
 (defparameter *test-state* (make-instance 'game-state))
 
-(defun make-test-object (type)
-  (make-instance type
-                 :position (get-standard-spot)
-                 :direction (get-standard-spot)
-                 :speed (/ (random 11) 10)))
 
-(defun init-test ()
-  (with-slots (players projectiles asteroids) *test-state*
-    (loop for i from 0 to 5 do
-         (add-to-hash-table
-          players
-          i
-          (make-test-object 'player)))
-    (loop for i from 5 to 10 do
-         (add-to-hash-table
-          projectiles
-          i
-          (make-test-object 'projectile)))
-    (loop for i from 10 to 15 do
+(defun make-random-object (type)
+  (make-instance type
+                 :position (get-random-spot)
+                 :direction (make-instance 'pos-vector
+                                           :x (/
+                                               (- (random 20) 10) 2)
+                                           :y (/
+                                               (- (random 20) 10) 2))
+                 :speed (/ (random 11) 4)))
+
+
+(defun generate-initial-state ()
+  (with-slots (asteroids) *global-game-state*
+    (loop for i from 0 to 6 do
          (add-to-hash-table
           asteroids
           i
-          (make-test-object 'asteroid)))))
+          (make-random-object 'asteroid)))))
+
+
+(defun get-object (type id)
+  (case type
+    (player (gethash id (players-of *global-game-state*)))
+    (asteroid (gethash id (asteroids-of *global-game-state*)))
+    (projectiles (gethash id (projectiles-of *global-game-state*)))))
 
 (defun multiply-by-scalar (vect scalar)
   (with-slots (x y) vect
@@ -90,8 +94,13 @@
   (setf (gethash key hash) elem))
 
 (defun recalc-player (player-id player)
-  (with-slots (position speed direction) player
-    (recalc-pos-vector position direction speed)))
+  (with-slots (position speed direction accelerating?) player
+    (recalc-pos-vector position direction speed)
+    (if accelerating?
+        (incf speed 1)
+        (setf speed (if (>= speed 0.5)
+                        (- speed 0.5)
+                        0)))))
 
 (defun recalc-asteroid (asteroid-id asteroid)
   (recalc-player asteroid-id asteroid))
@@ -117,12 +126,12 @@
          (square (diff y1 y2)))))
 
 (defun colliding? (obj1 obj2)
-  (with-slots ((pos1 position) (r1 radius)) obj1
-    (with-slots ((pos2 position) (r2 radius)) obj2
-      (with-slots ((x1 x) (y1 y)) pos1
-        (with-slots ((x2 x) (y2 y)) pos2
-          (format t "~A ~A~%" (distance x1 y1 x2 y2) (+ r1 r2))
-          (< (distance x1 y1 x2 y2) (+ r1 r2)))))))
+  (unless (eq obj1 obj2)
+    (with-slots ((pos1 position) (r1 radius)) obj1
+      (with-slots ((pos2 position) (r2 radius)) obj2
+        (with-slots ((x1 x) (y1 y)) pos1
+          (with-slots ((x2 x) (y2 y)) pos2
+            (< (distance x1 y1 x2 y2) (+ r1 r2))))))))
 
 (defun transform-cords (position)
   (with-slots (x y) position
@@ -132,11 +141,13 @@
 
 (defun check-collisions-between (hash1 hash2)
   (loop for key1 being the hash-key in hash1
-     for value1 being the hash-value in hash1 do
-       (loop for key2 being the hash-key in hash2
+     for value1 being the hash-value in hash1
+     append (loop for key2 being the hash-key in hash2
           for value2 being the hash-value in hash2
           when (colliding? value1 value2)
-          collect (cons key1 key2))))
+           collect (cons
+                    (cons value1 (type-of value1))
+                    (cons value2 (type-of value2))))))
 
 (defun check-collisions (state)
   (with-slots (players asteroids) state
@@ -164,6 +175,15 @@
   (with-slots (id) msg
     (with-slots (players) *global-game-state*
       (remhash id players))))
+
+(defun handle-player-accelarate (msg)
+  (with-slots (id status) msg
+    (with-slots (accelerating?) (get-object'player id)
+      (cond
+        ((equal status "down") (setf accelerating? t))
+        ((equal status "up") (setf accelerating? nil))))))
+
+(defun handle-player-rotate (msg))
 
 (defun update-game-state ()
   (block handler

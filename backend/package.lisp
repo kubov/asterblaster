@@ -4,5 +4,6 @@
         :hu.dwim.defclass-star
         :hu.dwim.def
         :alexandria
-        :bordeaux-threads)
+        :bordeaux-threads
+        :anaphora)
   (:import-from :chanl unbounded-channel send recv))

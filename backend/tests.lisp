@@ -63,9 +63,8 @@
       (draw-objects (asteroids-of *test-state*) 20 0 0 255)
       (draw-objects (players-of *test-state*) 10 0 255 0)
       (draw-objects (projectiles-of *test-state*) 5 0 0 0)
-      (let ((cols (update-state *test-state*)))
-        (format t "~A~%" cols))
-      (sleep 1))))
+      (update-state *test-state*)
+      (sleep 1/10))))
 
 (defun run()
   (init-test)
