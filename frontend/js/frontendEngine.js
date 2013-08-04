@@ -37,20 +37,39 @@ function onClose(evt) {
 };
 
 function activateGame() {
-	alert(document.getElementById("message").innerHTML = "activated");
+	document.getElementById("message").innerHTML = "Welcome to the game!";
+
+	/*
 	document.onkeydown = onKeyDown;
 	document.onkeyup = onKeyUp;
 
+	
 	window.addEventListener("keydown", function (e) {
 		// space and arrow keys
 		if (usedKeys.indexOf(e.keyCode) > -1) {
 			e.preventDefault();
 		}
 	}, false);
+	*/
+
+	$('window').on('keydown', function () {
+		//Your Function Here
+	});
+}
+
+function joinGame() {
+	establishConnection();
 }
 
 function leaveGame() {
 	connection.close();
+	
+	window.addEventListener("keydown", function (e) {
+		// space and arrow keys
+		if (usedKeys.indexOf(e.keyCode) > -1) {
+			return false;
+		}
+	}, false);
 }
 
 function sendMessage() {
@@ -122,6 +141,7 @@ function onKeyUp(evt) {
 }
 
 function onKeyPress(evt, status) {
+	
 	var msgType;
 	var data = {
 		"status": status
@@ -146,9 +166,10 @@ function onKeyPress(evt, status) {
 			"msgType": msgType,
 			"data": data
 		}
-		//connection.send(JSON.stringify(json));
+		connection.send(JSON.stringify(json));
 		console.log(JSON.stringify(json));
 	}
+
 	
 };
 
