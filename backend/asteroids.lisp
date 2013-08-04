@@ -126,12 +126,23 @@
 
 (defun f (position)
   (with-slots (x y) position
-    (cons
+    (list
      (+ (/ *canvas-w* 2) x)
      (+ (/ *canvas-h* 2) y))))
 
-(defun draw-asteroid (nothing astroid)
-  )
+(defun draw-asteroid (nothing asteroid)
+  (let ((cord (f (position-of asteroid))))
+    (format t "~A ~A~%" (first cord) (second cord))
+    (pal:draw-rectangle
+     (pal:v (first cord) (second cord))
+     10
+     10
+     0
+     0
+     0
+     255
+     :absolutep t
+     :smoothp nil)))
 
 
 (defun draw-asteroids (asteroids)
@@ -174,6 +185,11 @@
         (add-to-hash-table players id p))))
   t)
 
+(defun handle-player-leave (msg)
+  (with-slots (id) msg
+    (with-slots (players) *global-game-state*
+      (remhash players id))))
+
 (defun update-game-state ()
   (block handler
     ;; remember about locking!
@@ -185,7 +201,7 @@
              (format t "handling join~&")
              (handle-player-join msg))
             (user-leave-message         ; TODO: implement
-             t))))) 
+             (handle-player-leave msg))))))
 
 (defun send-state-to-clients ()
   (loop do
