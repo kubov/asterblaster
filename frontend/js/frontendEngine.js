@@ -2,6 +2,8 @@
 
 var connection = {};
 var mySpaceship;
+var usedKeys = [MOVE_UP, MOVE_DOWN, MOVE_LEFT, MOVE_RIGHT, SHOT];
+var pressedKeys = new Array();
 
 function establishConnection() {
 	if (window.MozWebSocket) {
@@ -35,14 +37,24 @@ function onClose(evt) {
 };
 
 function activateGame() {
-	document.getElementById("message").innerHTML("activated");
+	alert(document.getElementById("message").innerHTML = "activated");
 	document.onkeydown = onKeyDown;
 	document.onkeyup = onKeyUp;
+
+	window.addEventListener("keydown", function (e) {
+		// space and arrow keys
+		if (usedKeys.indexOf(e.keyCode) > -1) {
+			e.preventDefault();
+		}
+	}, false);
+}
+
+function leaveGame() {
+	connection.close();
 }
 
 function sendMessage() {
 	establishConnection();
-	console.log("tu jtestms");
 	var jsonMessage2 = {
 		"msgType": "hello",
 		"data": { "name": "Magda" },
@@ -52,8 +64,6 @@ function sendMessage() {
 };
 
 function onMessage(evt) {
-	console.log("dostalem message");
-	console.log(evt.data);
 	var data = JSON.parse(evt.data);
 
 	switch (data.msgType) {
@@ -96,11 +106,19 @@ function parseGameObjects(data) {
 }
 
 function onKeyDown(evt) {
-	onKeyPress(evt, "down");
+	if (pressedKeys.indexOf(evt.keyCode) == -1) {
+		pressedKeys.push(evt.keyCode);
+		onKeyPress(evt, "down");
+	}
 }
 
 function onKeyUp(evt) {
-	onKeyPress(evt, "up");
+	var i = pressedKeys.indexOf(evt.keyCode);
+	if (i > -1) {
+		pressedKeys.splice(i, 1);
+		onKeyPress(evt, "up");
+	}
+
 }
 
 function onKeyPress(evt, status) {
@@ -116,7 +134,7 @@ function onKeyPress(evt, status) {
 		case MOVE_RIGHT:
 			msgType = "rotate";
 			data["direction"] = "left";
-			break;			
+			break;				
 		case MOVE_UP:
 			msgType = "accelerate";
 			break;
@@ -124,14 +142,12 @@ function onKeyPress(evt, status) {
 	
 	if (msgType != undefined)
 	{
-		if (rotateType != undefined) {
-			data["rotateType"] = rotateType
-		}
 		var json = {
 			"msgType": msgType,
 			"data": data
 		}
-		connection.send(JSON.stringify(json));
+		//connection.send(JSON.stringify(json));
+		console.log(JSON.stringify(json));
 	}
 	
 };
