@@ -130,14 +130,16 @@ function clear(ctx) {
 };
 
 function drawState(arr) {
-    var ctx = document.getElementById('mycanvas').getContext('2d');
-    ctx.fillStyle = 'black'
-    clear(ctx);
-    for (i = 0; i < arr.length; ++i) {
-        ctx.save();
-        arr[i].draw(ctx);
-        ctx.restore();
-    }
+	if (arr != null) {
+		var ctx = document.getElementById('mycanvas').getContext('2d');
+		ctx.fillStyle = 'black'
+		clear(ctx);
+		for (i = 0; i < arr.length; ++i) {
+			ctx.save();
+			arr[i].draw(ctx);
+			ctx.restore();
+		}
+	}
 };
 
 function Welcome() {

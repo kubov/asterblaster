@@ -2,7 +2,7 @@
 
 var connection = {};
 var mySpaceship;
-var amIAlive = true;
+var amIAlive;
 var usedKeys = [MOVE_UP, MOVE_DOWN, MOVE_LEFT, MOVE_RIGHT, SHOT];
 var pressedKeys = new Array();
 
@@ -45,7 +45,6 @@ function activateGame() {
 
 function joinGame() {
 	establishConnection();
-	amIAlive = true;
 }
 
 function leaveGame() {
@@ -60,9 +59,10 @@ function onMessage(evt) {
 	switch (data.msgType) {
 		case "helloReply":
 			mySpaceship = data.data.id;
+			amIAlive = true;
 			break;
 		case "state":
-			console.log(data.data);
+			//console.log(data.data);
 			parseGameObjects(data.data);
 			break;
 	}
@@ -89,7 +89,7 @@ function parseGameObjects(data) {
 						data["players"][key]["position"].y, data["players"][key].k * multiply, data["players"][key].id);
 					objects.push(temp);
 				} else {
-					//amIAlive = false;
+					amIAlive = false;
 				}
 			} else {
 				if (data["players"][key]["alive?"] != null) {
@@ -123,7 +123,7 @@ function onKeyDown(evt) {
 	evt.preventDefault();
 	if (evt.keyCode == SHOT) {
 		if (amIAlive) {
-			var snd = new Audio("media/bullet.mp3");
+			var snd = new Audio("media/bullet.mp3");  
 			snd.play();
 		}
 	}
