@@ -24,7 +24,6 @@ function establishConnection() {
 };
 
 function onOpen(evt) {
-	console.log("polaczenie otwarte");
 	var userName = document.getElementById("userName").value;
 	var jsonMessage = {
 		"msgType": "hello",
@@ -35,7 +34,6 @@ function onOpen(evt) {
 };
 
 function onClose(evt) {
-	//console.log("koneic polaczenia");
 };
 
 function activateGame() {
@@ -72,6 +70,7 @@ function onMessage(evt) {
 
 function parseGameObjects(data) {
 	var objects = new Array();
+	var results = new Array();
 	if (data["asteroids"] != null) {
 		for (var key in data["asteroids"]) {
 			if (data["asteroids"][key]["alive?"] != null) {
@@ -84,6 +83,9 @@ function parseGameObjects(data) {
 	if (data["players"] != null) {
 		var multiply = 2 * Math.PI * (1 / ROTATION_ANGLE);
 		for (var key in data["players"]) {
+			var r = new Result(
+				data["players"][key].name, data["players"][key].score);
+			results.push(r);
 			if (key == mySpaceship) {
 				if (data["players"][key]["alive?"] != null) {
 					var temp = new MySpaceship(data["players"][key]["position"].x,
@@ -94,8 +96,7 @@ function parseGameObjects(data) {
 					amIAlive = false;
 				}
 			} else {
-				if (data["players"][key]["alive?"] != null) {
-					console.log(data["players"][key].name);
+				if (data["players"][key]["alive?"] != null) {c
 					var temp = new Spaceship(data["players"][key]["position"].x,
 						data["players"][key]["position"].y, data["players"][key].k * multiply,
 						data["players"][key].id, data["players"][key].name);
@@ -119,6 +120,7 @@ function parseGameObjects(data) {
 		}
 	}
 	drawState(objects);
+	showResults(results);
 
 }
 
