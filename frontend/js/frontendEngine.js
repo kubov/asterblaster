@@ -78,7 +78,6 @@ function parseGameObjects(data) {
 	}
 	if (data["players"] != null) {
 		var multiply =  2 * Math.PI * (1 / ROTATION_ANGLE);
-		console.log(multiply);
 		for (var key in data["players"]) {
 			if (key == mySpaceship) {
 				var temp = new MySpaceship(data["players"][key]["position"].x,
