@@ -3,7 +3,7 @@
 (setf clws:*debug-on-server-errors* t)
 (setf clws:*debug-on-resource-errors* t)
 
-
+(defvar *user-id-seq* 0)
 
 (defclass api-resource (ws-resource)
   ())
@@ -24,15 +24,6 @@
 (register-global-resource "/api"
                           (make-instance 'api-resource)
                           (origin-prefix nil))
-
-(defun start-asterblaster-server ()
-  (bordeaux-threads:make-thread (lambda ()
-                                (run-server 13373))
-                                :name "Asterblaster")
-  (bordeaux-threads:make-thread (lambda ()
-                                (run-resource-listener
-                                 (find-global-resource "/api")))
-                              :name "resource listener for /api"))
 
 (def class* server-message ()
   ((msg-type "unknown" :type string)
@@ -86,3 +77,12 @@
                    :data (apply #'make-instance msg-class 
                                 (alist-plist (assoc-cdr :data alist))))))
 
+
+
+(defparameter *update-state-channel* (make-instance 'unbounded-channel))
+
+(def class* stop-message () ())
+
+(def class* user-join-message ()
+  ((name)
+   (id (incf *user-id-seq*))))

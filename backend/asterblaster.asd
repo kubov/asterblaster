@@ -18,4 +18,5 @@
     :components ((:file "package")
                  (:file "utils")
                  (:file "server")
-                 (:file "asteroids")))
+                 (:file "asteroids")
+                 (:file "main")))
